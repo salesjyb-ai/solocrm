@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
-import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2 } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2, X } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
-import type { Task } from '../types';
+import type { Task, Subtask } from '../types';
 import f from './FormField.module.css';
 import { exportTasks } from '../utils/exportCSV';
 import styles from './Tasks.module.css';
@@ -27,29 +27,98 @@ function formatDateLabel(dateStr: string, today: string) {
   return { label: `${mmdd} (${weekday})`, tag: '', tagType: 'normal' };
 }
 
+// 미니 캘린더 컴포넌트
+function MiniCalendar({ tasks, onSelectDate, onClose }: { tasks: Task[]; onSelectDate: (date: string) => void; onClose: () => void }) {
+  const today = getKSTToday();
+  const [viewDate, setViewDate] = useState(() => new Date(today + 'T00:00:00'));
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // 이 달에 할 일 있는 날짜 set
+  const taskDates = new Set(
+    tasks.filter(t => {
+      if (!t.dueDate) return false;
+      const d = new Date(t.dueDate + 'T00:00:00');
+      return d.getFullYear() === year && d.getMonth() === month;
+    }).map(t => t.dueDate)
+  );
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let i = 1; i <= daysInMonth; i++) cells.push(i);
+
+  const prevMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  const nextMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+
+  return (
+    <div className={styles.calendarPopup}>
+      <div className={styles.calNavRow}>
+        <button onClick={prevMonth} className={styles.calNavBtn}>‹</button>
+        <span className={styles.calMonthLabel}>{year}년 {month + 1}월</span>
+        <button onClick={nextMonth} className={styles.calNavBtn}>›</button>
+        <button onClick={onClose} className={styles.calCloseBtn}><X size={14} /></button>
+      </div>
+      <div className={styles.calGrid}>
+        {['일','월','화','수','목','금','토'].map(d => (
+          <div key={d} className={styles.calWeekday}>{d}</div>
+        ))}
+        {cells.map((day, i) => {
+          if (!day) return <div key={`empty-${i}`} />;
+          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isToday = dateStr === today;
+          const hasTasks = taskDates.has(dateStr);
+          return (
+            <button key={dateStr} className={`${styles.calDay} ${isToday ? styles.calToday : ''} ${hasTasks ? styles.calHasTasks : ''}`}
+              onClick={() => { onSelectDate(dateStr); onClose(); }}>
+              {day}
+              {hasTasks && <span className={styles.calDot} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Tasks() {
-  const { tasks, toggleTask, deleteTask, addTask, leads, projects } = useApp();
+  const { tasks, toggleTask, deleteTask, addTask, updateTaskSubtasks, leads, projects } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalDate, setModalDate] = useState(''); // 날짜 섹션에서 바로 추가 시 사용
+  const [modalDate, setModalDate] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('date');
   const [tabFilter, setTabFilter] = useState<TabFilter>('upcoming');
   const [showDone, setShowDone] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [inlineInputs, setInlineInputs] = useState<Record<string, string>>({}); // 날짜별 인라인 입력
+  const [inlineInputs, setInlineInputs] = useState<Record<string, string>>({});
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', dueDate: '', linkedType: '' as '' | 'lead' | 'project', linkedId: '' });
+  const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const today = getKSTToday();
   const todayDate = new Date(today + 'T00:00:00');
   const weekLater = new Date(todayDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+  // 달력에서 날짜 선택 시 해당 날짜만 필터링
+  const handleCalendarSelect = (date: string) => {
+    setSelectedDate(date);
+    setTabFilter('all');
+    setShowDone(true);
+  };
+
+  const clearDateFilter = () => setSelectedDate(null);
+
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
+      if (selectedDate) return t.dueDate === selectedDate;
       if (!showDone && t.done) return false;
       if (tabFilter === 'today') return t.dueDate === today;
       if (tabFilter === 'upcoming') return !t.done || t.dueDate <= weekLater;
       return true;
     });
-  }, [tasks, showDone, tabFilter, today, weekLater]);
+  }, [tasks, showDone, tabFilter, today, weekLater, selectedDate]);
 
   const grouped = useMemo(() => {
     const map: Record<string, Task[]> = {};
@@ -59,13 +128,11 @@ export default function Tasks() {
       if (!map[t.dueDate]) map[t.dueDate] = [];
       map[t.dueDate].push(t);
     });
-    const sortedDates = Object.keys(map).sort();
-    return { sortedDates, map, noDate };
+    return { sortedDates: Object.keys(map).sort(), map, noDate };
   }, [filteredTasks]);
 
   const toggleCollapse = (key: string) => setCollapsed(p => ({ ...p, [key]: !p[key] }));
 
-  // 모달로 추가 (상세 옵션 포함)
   const openModal = (date = '') => {
     setModalDate(date);
     setForm({ title: '', dueDate: date, linkedType: '', linkedId: '' });
@@ -78,16 +145,15 @@ export default function Tasks() {
       if (form.linkedType === 'lead') { const l = leads.find(l => l.id === form.linkedId); return l ? { type: 'lead' as const, id: l.id, name: l.company } : undefined; }
       const p = projects.find(p => p.id === form.linkedId); return p ? { type: 'project' as const, id: p.id, name: p.name } : undefined;
     })() : undefined;
-    addTask({ title: form.title, done: false, dueDate: form.dueDate || today, linkedTo });
+    addTask({ title: form.title, done: false, dueDate: form.dueDate || today, linkedTo, subtasks: [] });
     setModalOpen(false);
     setForm({ title: '', dueDate: '', linkedType: '', linkedId: '' });
   };
 
-  // 인라인 빠른 추가
   const handleInlineAdd = (date: string) => {
     const title = (inlineInputs[date] || '').trim();
     if (!title) return;
-    addTask({ title, done: false, dueDate: date, linkedTo: undefined });
+    addTask({ title, done: false, dueDate: date, linkedTo: undefined, subtasks: [] });
     setInlineInputs(p => ({ ...p, [date]: '' }));
   };
 
@@ -100,7 +166,7 @@ export default function Tasks() {
     const isOpen = collapsed[date] !== true;
     const items = grouped.map[date];
     return (
-      <div key={date} className={styles.dateGroup}>
+      <div key={date} className={styles.dateGroup} ref={el => { dateRefs.current[date] = el; }}>
         <div className={styles.dateHeader}>
           <button className={styles.dateToggle} onClick={() => toggleCollapse(date)}>
             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -108,29 +174,24 @@ export default function Tasks() {
           <span className={styles.dateLabel}>{label}</span>
           {tag && <span className={`${styles.dateTag} ${styles[`tag_${tagType}`]}`}>{tag}</span>}
           <span className={styles.dateCount}>{items.filter(t => !t.done).length}개</span>
-          {/* 날짜 섹션에서 상세 추가 버튼 */}
           <button className={styles.dateAddBtn} onClick={() => openModal(date)} title="이 날짜에 추가">
             <Plus size={13} />
           </button>
         </div>
-
         {isOpen && (
           <div className={styles.dateItems}>
             {items.map(task => (
               <TaskRow key={task.id} task={task} today={today}
                 onToggle={() => toggleTask(task.id)}
                 onDelete={() => deleteTask(task.id)}
+                onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
               />
             ))}
-            {/* 인라인 빠른 추가 */}
             <div className={styles.inlineAdd}>
-              <input
-                className={styles.inlineInput}
-                placeholder="+ 빠르게 추가 (Enter)"
+              <input className={styles.inlineInput} placeholder="+ 빠르게 추가 (Enter)"
                 value={inlineInputs[date] || ''}
                 onChange={e => setInlineInputs(p => ({ ...p, [date]: e.target.value }))}
-                onKeyDown={e => { if (e.key === 'Enter') handleInlineAdd(date); }}
-              />
+                onKeyDown={e => { if (e.key === 'Enter') handleInlineAdd(date); }} />
               {(inlineInputs[date] || '').trim() && (
                 <button className={styles.inlineSubmit} onClick={() => handleInlineAdd(date)}>추가</button>
               )}
@@ -149,50 +210,55 @@ export default function Tasks() {
           <p className={styles.subtitle}>{pendingCount}개 남음 · {doneCount}개 완료</p>
         </div>
         <div className={styles.headerRight}>
-          <div className={styles.viewToggle}>
-            <button className={`${styles.viewBtn} ${viewMode === 'date' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('date')}>
-              <Calendar size={13} /> 날짜별
+          {/* 캘린더 버튼 */}
+          <div className={styles.calendarWrap}>
+            <button className={`${styles.calBtn} ${showCalendar ? styles.calBtnActive : ''}`} onClick={() => setShowCalendar(p => !p)}>
+              <Calendar size={14} /> 날짜 이동
             </button>
-            <button className={`${styles.viewBtn} ${viewMode === 'all' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('all')}>
-              전체
-            </button>
+            {showCalendar && (
+              <MiniCalendar tasks={tasks} onSelectDate={handleCalendarSelect} onClose={() => setShowCalendar(false)} />
+            )}
           </div>
-          <button className={styles.exportBtn} onClick={() => exportTasks(tasks)}>
-            <Download size={14} /> CSV
-          </button>
-          <button className={styles.addBtn} onClick={() => openModal()}>
-            <Plus size={14} /> 할 일 추가
-          </button>
+          <div className={styles.viewToggle}>
+            <button className={`${styles.viewBtn} ${viewMode === 'date' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('date')}>날짜별</button>
+            <button className={`${styles.viewBtn} ${viewMode === 'all' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('all')}>전체</button>
+          </div>
+          <button className={styles.exportBtn} onClick={() => exportTasks(tasks)}><Download size={14} /> CSV</button>
+          <button className={styles.addBtn} onClick={() => openModal()}><Plus size={14} /> 할 일 추가</button>
         </div>
       </div>
 
-      {/* 탭 */}
-      <div className={styles.tabs}>
-        <button className={`${styles.tab} ${tabFilter === 'today' ? styles.tabActive : ''}`} onClick={() => setTabFilter('today')}>
-          오늘 <span className={styles.tabBadge}>{todayCount}</span>
-        </button>
-        <button className={`${styles.tab} ${tabFilter === 'upcoming' ? styles.tabActive : ''}`} onClick={() => setTabFilter('upcoming')}>
-          이번 주
-        </button>
-        <button className={`${styles.tab} ${tabFilter === 'all' ? styles.tabActive : ''}`} onClick={() => setTabFilter('all')}>
-          전체
-        </button>
-        <label className={styles.doneToggle}>
-          <input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} />
-          완료 항목 보기
-        </label>
-      </div>
+      {/* 날짜 필터 활성 시 배너 */}
+      {selectedDate && (
+        <div className={styles.dateFilterBanner}>
+          <Calendar size={13} />
+          <span>{new Date(selectedDate + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })} 할 일만 보는 중</span>
+          <button onClick={clearDateFilter}><X size={13} /> 필터 해제</button>
+        </div>
+      )}
+
+      {/* 탭 (날짜 필터 없을 때만) */}
+      {!selectedDate && (
+        <div className={styles.tabs}>
+          <button className={`${styles.tab} ${tabFilter === 'today' ? styles.tabActive : ''}`} onClick={() => setTabFilter('today')}>
+            오늘 <span className={styles.tabBadge}>{todayCount}</span>
+          </button>
+          <button className={`${styles.tab} ${tabFilter === 'upcoming' ? styles.tabActive : ''}`} onClick={() => setTabFilter('upcoming')}>이번 주</button>
+          <button className={`${styles.tab} ${tabFilter === 'all' ? styles.tabActive : ''}`} onClick={() => setTabFilter('all')}>전체</button>
+          <label className={styles.doneToggle}>
+            <input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} />
+            완료 항목 보기
+          </label>
+        </div>
+      )}
 
       {viewMode === 'date' ? (
         <div className={styles.dateGroups}>
           {grouped.sortedDates.length === 0 && grouped.noDate.length === 0 && (
             <div className={styles.emptyState}>할 일이 없습니다 🎉</div>
           )}
-          {/* 기한 초과 */}
           {grouped.sortedDates.filter(d => d < today).map(renderDateGroup)}
-          {/* 오늘 이후 */}
           {grouped.sortedDates.filter(d => d >= today).map(renderDateGroup)}
-          {/* 날짜 미지정 */}
           {grouped.noDate.length > 0 && (
             <div className={styles.dateGroup}>
               <div className={styles.dateHeader}>
@@ -208,6 +274,7 @@ export default function Tasks() {
                     <TaskRow key={task.id} task={task} today={today}
                       onToggle={() => toggleTask(task.id)}
                       onDelete={() => deleteTask(task.id)}
+                      onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
                     />
                   ))}
                 </div>
@@ -218,27 +285,23 @@ export default function Tasks() {
       ) : (
         <div className={styles.listView}>
           {filteredTasks.length === 0 && <div className={styles.emptyState}>할 일이 없습니다 🎉</div>}
-          {filteredTasks
-            .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
-            .map(task => (
-              <TaskRow key={task.id} task={task} today={today}
-                onToggle={() => toggleTask(task.id)}
-                onDelete={() => deleteTask(task.id)}
-              />
-            ))
-          }
+          {filteredTasks.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '')).map(task => (
+            <TaskRow key={task.id} task={task} today={today}
+              onToggle={() => toggleTask(task.id)}
+              onDelete={() => deleteTask(task.id)}
+              onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
+            />
+          ))}
         </div>
       )}
 
-      {/* 추가 모달 */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={modalDate ? `${modalDate} 할 일 추가` : '할 일 추가'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.field}>
             <label className={f.label}>내용 *</label>
             <input className={f.input} placeholder="예: 제안서 검토 후 발송" value={form.title}
               onChange={e => setForm(p => ({...p, title: e.target.value}))}
-              onKeyDown={e => { if (e.key === 'Enter') handleModalAdd(); }}
-              autoFocus />
+              onKeyDown={e => { if (e.key === 'Enter') handleModalAdd(); }} autoFocus />
           </div>
           <div className={f.field}>
             <label className={f.label}>날짜</label>
@@ -258,10 +321,7 @@ export default function Tasks() {
                 <label className={f.label}>{form.linkedType === 'lead' ? '리드' : '프로젝트'} 선택</label>
                 <select className={f.select} value={form.linkedId} onChange={e => setForm(p => ({...p, linkedId: e.target.value}))}>
                   <option value="">선택...</option>
-                  {form.linkedType === 'lead'
-                    ? leads.map(l => <option key={l.id} value={l.id}>{l.name} ({l.company})</option>)
-                    : projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
-                  }
+                  {form.linkedType === 'lead' ? leads.map(l => <option key={l.id} value={l.id}>{l.name} ({l.company})</option>) : projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
             )}
@@ -276,23 +336,78 @@ export default function Tasks() {
   );
 }
 
-function TaskRow({ task, today, onToggle, onDelete }: { task: Task; today: string; onToggle: () => void; onDelete: () => void }) {
+function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
+  task: Task; today: string;
+  onToggle: () => void; onDelete: () => void;
+  onUpdateSubtasks: (subs: Subtask[]) => void;
+}) {
   const overdue = !task.done && task.dueDate < today;
+  const [expanded, setExpanded] = useState(false);
+  const [newSubtask, setNewSubtask] = useState('');
+  const subtasks = task.subtasks || [];
+  const doneCount = subtasks.filter(s => s.done).length;
+
+  const addSubtask = () => {
+    const title = newSubtask.trim();
+    if (!title) return;
+    const updated = [...subtasks, { id: crypto.randomUUID(), title, done: false }];
+    onUpdateSubtasks(updated);
+    setNewSubtask('');
+  };
+
+  const toggleSubtask = (id: string) => {
+    onUpdateSubtasks(subtasks.map(s => s.id === id ? { ...s, done: !s.done } : s));
+  };
+
+  const deleteSubtask = (id: string) => {
+    onUpdateSubtasks(subtasks.filter(s => s.id !== id));
+  };
+
   return (
-    <div className={`${styles.taskRow} ${task.done ? styles.done : ''} ${overdue ? styles.overdue : ''}`}>
-      <div className={`${styles.check} ${task.done ? styles.checked : ''}`} onClick={onToggle}>
-        {task.done && <Check size={11} strokeWidth={3} />}
+    <div className={`${styles.taskWrap} ${task.done ? styles.done : ''}`}>
+      <div className={`${styles.taskRow} ${overdue ? styles.overdue : ''}`}>
+        <div className={`${styles.check} ${task.done ? styles.checked : ''}`} onClick={onToggle}>
+          {task.done && <Check size={11} strokeWidth={3} />}
+        </div>
+        <div className={styles.taskBody} onClick={onToggle}>
+          <span className={styles.taskTitle}>{task.title}</span>
+          {subtasks.length > 0 && (
+            <span className={styles.subCount}>{doneCount}/{subtasks.length}</span>
+          )}
+          {task.linkedTo && <span className={styles.taskLink}>{task.linkedTo.type === 'lead' ? '🤝' : '📁'} {task.linkedTo.name}</span>}
+        </div>
+        {overdue && <AlertCircle size={13} className={styles.overdueIcon} />}
+        {/* 서브태스크 토글 */}
+        <button className={styles.subToggleBtn} onClick={() => setExpanded(p => !p)} title="하위 업무">
+          <Plus size={13} />
+          {subtasks.length > 0 && (expanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />)}
+        </button>
+        <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(); }} title="삭제">
+          <Trash2 size={13} />
+        </button>
       </div>
-      <div className={styles.taskBody} onClick={onToggle}>
-        <span className={styles.taskTitle}>{task.title}</span>
-        {task.linkedTo && (
-          <span className={styles.taskLink}>{task.linkedTo.type === 'lead' ? '🤝' : '📁'} {task.linkedTo.name}</span>
-        )}
-      </div>
-      {overdue && <AlertCircle size={13} className={styles.overdueIcon} />}
-      <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(); }} title="삭제">
-        <Trash2 size={13} />
-      </button>
+
+      {/* 서브태스크 패널 */}
+      {expanded && (
+        <div className={styles.subtaskPanel}>
+          {subtasks.map(sub => (
+            <div key={sub.id} className={`${styles.subtaskRow} ${sub.done ? styles.subDone : ''}`}>
+              <div className={`${styles.subCheck} ${sub.done ? styles.subChecked : ''}`} onClick={() => toggleSubtask(sub.id)}>
+                {sub.done && <Check size={9} strokeWidth={3} />}
+              </div>
+              <span className={styles.subTitle}>{sub.title}</span>
+              <button className={styles.subDeleteBtn} onClick={() => deleteSubtask(sub.id)}><X size={11} /></button>
+            </div>
+          ))}
+          <div className={styles.subtaskInput}>
+            <input className={styles.subInput} placeholder="하위 업무 추가 (Enter)"
+              value={newSubtask}
+              onChange={e => setNewSubtask(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') addSubtask(); }} />
+            {newSubtask.trim() && <button className={styles.inlineSubmit} onClick={addSubtask}>추가</button>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

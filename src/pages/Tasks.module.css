@@ -5,14 +5,39 @@
 .headerRight { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
 .viewToggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-.viewBtn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; font-size: 12.5px; color: var(--text-secondary); transition: all var(--transition); }
+.viewBtn { padding: 7px 12px; font-size: 12.5px; color: var(--text-secondary); transition: all var(--transition); }
 .viewBtn:hover { background: var(--bg); }
 .viewBtnActive { background: var(--accent); color: #fff; }
-
-.exportBtn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-secondary); transition: all var(--transition); }
+.exportBtn { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-secondary); }
 .exportBtn:hover { background: var(--bg); }
 .addBtn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
 .addBtn:hover { opacity: 0.85; }
+
+/* 캘린더 버튼 */
+.calendarWrap { position: relative; }
+.calBtn { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12.5px; color: var(--text-secondary); transition: all var(--transition); }
+.calBtn:hover, .calBtnActive { background: var(--accent-light); color: var(--accent); border-color: var(--accent-muted); }
+
+/* 미니 캘린더 팝업 */
+.calendarPopup { position: absolute; top: calc(100% + 6px); right: 0; z-index: 100; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 12px; width: 240px; }
+.calNavRow { display: flex; align-items: center; margin-bottom: 10px; gap: 4px; }
+.calMonthLabel { flex: 1; text-align: center; font-size: 13px; font-weight: 600; }
+.calNavBtn { padding: 4px 8px; font-size: 16px; color: var(--text-secondary); border-radius: var(--radius-xs); transition: background var(--transition); }
+.calNavBtn:hover { background: var(--bg); }
+.calCloseBtn { color: var(--text-muted); padding: 4px; border-radius: var(--radius-xs); display: flex; align-items: center; }
+.calCloseBtn:hover { background: var(--bg); }
+.calGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.calWeekday { text-align: center; font-size: 10.5px; color: var(--text-muted); padding: 4px 0; font-weight: 600; }
+.calDay { position: relative; text-align: center; font-size: 12px; padding: 5px 2px; border-radius: var(--radius-xs); cursor: pointer; transition: background var(--transition); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.calDay:hover { background: var(--bg); }
+.calToday { background: var(--accent-light); color: var(--accent); font-weight: 700; }
+.calHasTasks { font-weight: 600; }
+.calDot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+
+/* 날짜 필터 배너 */
+.dateFilterBanner { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--accent-light); border: 1px solid var(--accent-muted); border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 13px; color: var(--accent); }
+.dateFilterBanner span { flex: 1; }
+.dateFilterBanner button { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); font-weight: 600; }
 
 /* 탭 */
 .tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -27,17 +52,14 @@
 /* 날짜 그룹 */
 .dateGroups { display: flex; flex-direction: column; gap: 10px; }
 .dateGroup { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
-
-.dateHeader { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid transparent; transition: background var(--transition); }
-.dateHeader:has(+ .dateItems) { border-bottom-color: var(--border); }
+.dateHeader { display: flex; align-items: center; gap: 8px; padding: 11px 14px; transition: background var(--transition); }
 .dateToggle { display: flex; align-items: center; color: var(--text-muted); flex-shrink: 0; }
 .dateLabel { font-size: 13.5px; font-weight: 600; flex: 1; }
 .dateCount { font-size: 11.5px; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); }
-.dateAddBtn { display: flex; align-items: center; justify-content: center; padding: 4px 8px; border-radius: var(--radius-xs); color: var(--text-muted); font-size: 11.5px; gap: 3px; transition: all var(--transition); opacity: 0; }
+.dateAddBtn { display: flex; align-items: center; padding: 4px 8px; border-radius: var(--radius-xs); color: var(--text-muted); transition: all var(--transition); opacity: 0; }
 .dateHeader:hover .dateAddBtn { opacity: 1; }
 .dateAddBtn:hover { background: var(--accent-light); color: var(--accent); }
 
-/* 날짜 태그 */
 .dateTag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
 .tag_overdue { background: var(--status-lost-bg); color: var(--status-lost); }
 .tag_today { background: var(--accent-light); color: var(--accent); }
@@ -45,14 +67,13 @@
 .tag_soon { background: #fef3c7; color: #d97706; }
 .tag_normal { display: none; }
 
-.dateItems {}
-
 /* 할 일 행 */
-.taskRow { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); transition: background var(--transition); }
-.taskRow:last-child { border-bottom: none; }
+.taskWrap { border-bottom: 1px solid var(--border); }
+.taskWrap:last-child { border-bottom: none; }
+.taskWrap.done { opacity: 0.45; }
+.taskRow { display: flex; align-items: center; gap: 10px; padding: 11px 14px; transition: background var(--transition); }
 .taskRow:hover { background: var(--bg); }
-.taskRow:hover .deleteBtn { opacity: 1; }
-.done { opacity: 0.45; }
+.taskRow:hover .deleteBtn, .taskRow:hover .subToggleBtn { opacity: 1; }
 .overdue .taskTitle { color: var(--status-lost); }
 
 .check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all var(--transition); }
@@ -60,10 +81,29 @@
 .taskBody { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; cursor: pointer; }
 .taskTitle { font-size: 13.5px; }
 .done .taskTitle { text-decoration: line-through; }
+.subCount { font-size: 11px; background: var(--bg); border: 1px solid var(--border); padding: 1px 7px; border-radius: 10px; color: var(--text-muted); }
 .taskLink { font-size: 11.5px; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border); }
 .overdueIcon { color: var(--status-lost); flex-shrink: 0; }
+.subToggleBtn { display: flex; align-items: center; gap: 2px; opacity: 0; color: var(--text-muted); padding: 4px 6px; border-radius: var(--radius-xs); transition: all var(--transition); }
+.subToggleBtn:hover { background: var(--accent-light); color: var(--accent); }
 .deleteBtn { opacity: 0; color: var(--text-muted); padding: 4px; border-radius: var(--radius-xs); flex-shrink: 0; transition: all var(--transition); }
 .deleteBtn:hover { color: var(--status-lost); background: var(--status-lost-bg); }
+
+/* 서브태스크 패널 */
+.subtaskPanel { padding: 6px 14px 10px 42px; background: var(--bg); border-top: 1px dashed var(--border); }
+.subtaskRow { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.subtaskRow:last-of-type { border-bottom: none; }
+.subDone { opacity: 0.5; }
+.subCheck { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all var(--transition); }
+.subChecked { background: var(--accent); border-color: var(--accent); color: #fff; }
+.subTitle { flex: 1; font-size: 12.5px; }
+.subDone .subTitle { text-decoration: line-through; }
+.subDeleteBtn { color: var(--text-muted); display: flex; align-items: center; opacity: 0; transition: opacity var(--transition); }
+.subtaskRow:hover .subDeleteBtn { opacity: 1; }
+.subDeleteBtn:hover { color: var(--status-lost); }
+.subtaskInput { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.subInput { flex: 1; font-size: 12.5px; color: var(--text-primary); background: transparent; outline: none; border-bottom: 1px solid var(--border); padding-bottom: 3px; }
+.subInput::placeholder { color: var(--text-muted); }
 
 /* 인라인 추가 */
 .inlineAdd { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-top: 1px dashed var(--border); }
@@ -71,8 +111,5 @@
 .inlineInput::placeholder { color: var(--text-muted); }
 .inlineSubmit { font-size: 12px; padding: 4px 10px; background: var(--accent); color: #fff; border-radius: var(--radius-xs); font-weight: 600; }
 
-/* 전체 리스트 뷰 */
 .listView { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
-.listView .taskRow:hover .deleteBtn { opacity: 1; }
-
 .emptyState { text-align: center; padding: 48px; font-size: 14px; color: var(--text-muted); }

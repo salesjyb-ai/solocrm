@@ -37,12 +37,19 @@ export interface Project {
   createdAt: string;
 }
 
+export interface Subtask {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
   done: boolean;
   dueDate: string;
   linkedTo?: { type: 'lead' | 'project'; id: string; name: string };
+  subtasks: Subtask[];
 }
 
 export type ActivityType = 'note' | 'call' | 'email' | 'meeting' | 'status_change';

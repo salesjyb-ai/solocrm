@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem } from '../types';
+import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask } from '../types';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -28,6 +28,7 @@ interface AppContextType {
   deleteIssue: (projectId: string, issueId: string) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  updateTaskSubtasks: (id: string, subtasks: Subtask[]) => Promise<void>;
   addTask: (task: Omit<Task, 'id'>) => Promise<void>;
   addActivity: (leadId: string, type: ActivityType, content: string) => Promise<void>;
   getLeadActivities: (leadId: string) => Activity[];
@@ -69,6 +70,7 @@ function rowToTask(r: Record<string, unknown>): Task {
     id: r.id as string, title: r.title as string, done: r.done as boolean,
     dueDate: r.due_date as string,
     linkedTo: r.linked_type ? { type: r.linked_type as 'lead' | 'project', id: r.linked_id as string, name: r.linked_name as string } : undefined,
+    subtasks: (r.subtasks as Subtask[]) || [],
   };
 }
 
@@ -237,6 +239,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
+  const updateTaskSubtasks = async (id: string, subtasks: Subtask[]) => {
+    await supabase.from('crm_tasks').update({ subtasks }).eq('id', id);
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, subtasks } : t));
+  };
+
   const deleteTask = async (id: string) => {
     await supabase.from('crm_tasks').delete().eq('id', id);
     setTasks(prev => prev.filter(t => t.id !== id));
@@ -258,7 +265,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, addActivity, getLeadActivities }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities }}>
       {children}
     </AppContext.Provider>
   );

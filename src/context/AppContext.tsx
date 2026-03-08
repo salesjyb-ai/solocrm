@@ -27,6 +27,7 @@ interface AppContextType {
   deleteProject: (projectId: string) => Promise<void>;
   deleteIssue: (projectId: string, issueId: string) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
   addTask: (task: Omit<Task, 'id'>) => Promise<void>;
   addActivity: (leadId: string, type: ActivityType, content: string) => Promise<void>;
   getLeadActivities: (leadId: string) => Activity[];
@@ -236,6 +237,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
+  const deleteTask = async (id: string) => {
+    await supabase.from('crm_tasks').delete().eq('id', id);
+    setTasks(prev => prev.filter(t => t.id !== id));
+  };
+
   const addTask = async (task: Omit<Task, 'id'>) => {
     const { data, error } = await supabase.from('crm_tasks').insert({
       title: task.title, done: task.done, due_date: task.dueDate,
@@ -252,7 +258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue, toggleTask, addTask, addActivity, getLeadActivities }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, addActivity, getLeadActivities }}>
       {children}
     </AppContext.Provider>
   );

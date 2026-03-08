@@ -10,7 +10,7 @@ const nav = [
   { path: '/projects', label: '프로젝트', icon: FolderKanban },
   { path: '/tasks', label: '할 일', icon: CheckSquare },
   { path: '/kanban', label: '칸반', icon: Kanban },
-  { path: '/boss', label: '상무님(work)', icon: UserCheck },
+  { path: '/boss', label: '상무님 관리', icon: UserCheck },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {

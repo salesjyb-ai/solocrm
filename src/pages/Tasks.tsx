@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar } from 'lucide-react';
+import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
 import type { Task } from '../types';
@@ -8,7 +8,7 @@ import { exportTasks } from '../utils/exportCSV';
 import styles from './Tasks.module.css';
 
 type ViewMode = 'date' | 'all';
-type TabFilter = 'upcoming' | 'today' | 'all';
+type TabFilter = 'today' | 'upcoming' | 'all';
 
 function getKSTToday() {
   return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
@@ -28,12 +28,14 @@ function formatDateLabel(dateStr: string, today: string) {
 }
 
 export default function Tasks() {
-  const { tasks, toggleTask, addTask, leads, projects } = useApp();
+  const { tasks, toggleTask, deleteTask, addTask, leads, projects } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalDate, setModalDate] = useState(''); // 날짜 섹션에서 바로 추가 시 사용
   const [viewMode, setViewMode] = useState<ViewMode>('date');
   const [tabFilter, setTabFilter] = useState<TabFilter>('upcoming');
   const [showDone, setShowDone] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [inlineInputs, setInlineInputs] = useState<Record<string, string>>({}); // 날짜별 인라인 입력
   const [form, setForm] = useState({ title: '', dueDate: '', linkedType: '' as '' | 'lead' | 'project', linkedId: '' });
 
   const today = getKSTToday();
@@ -44,12 +46,11 @@ export default function Tasks() {
     return tasks.filter(t => {
       if (!showDone && t.done) return false;
       if (tabFilter === 'today') return t.dueDate === today;
-      if (tabFilter === 'upcoming') return t.dueDate <= weekLater || !t.done;
+      if (tabFilter === 'upcoming') return !t.done || t.dueDate <= weekLater;
       return true;
     });
   }, [tasks, showDone, tabFilter, today, weekLater]);
 
-  // 날짜별 그룹핑
   const grouped = useMemo(() => {
     const map: Record<string, Task[]> = {};
     const noDate: Task[] = [];
@@ -64,8 +65,15 @@ export default function Tasks() {
 
   const toggleCollapse = (key: string) => setCollapsed(p => ({ ...p, [key]: !p[key] }));
 
-  const handleAdd = () => {
-    if (!form.title) return;
+  // 모달로 추가 (상세 옵션 포함)
+  const openModal = (date = '') => {
+    setModalDate(date);
+    setForm({ title: '', dueDate: date, linkedType: '', linkedId: '' });
+    setModalOpen(true);
+  };
+
+  const handleModalAdd = () => {
+    if (!form.title.trim()) return;
     const linkedTo = form.linkedType && form.linkedId ? (() => {
       if (form.linkedType === 'lead') { const l = leads.find(l => l.id === form.linkedId); return l ? { type: 'lead' as const, id: l.id, name: l.company } : undefined; }
       const p = projects.find(p => p.id === form.linkedId); return p ? { type: 'project' as const, id: p.id, name: p.name } : undefined;
@@ -75,9 +83,63 @@ export default function Tasks() {
     setForm({ title: '', dueDate: '', linkedType: '', linkedId: '' });
   };
 
+  // 인라인 빠른 추가
+  const handleInlineAdd = (date: string) => {
+    const title = (inlineInputs[date] || '').trim();
+    if (!title) return;
+    addTask({ title, done: false, dueDate: date, linkedTo: undefined });
+    setInlineInputs(p => ({ ...p, [date]: '' }));
+  };
+
   const pendingCount = tasks.filter(t => !t.done).length;
   const doneCount = tasks.filter(t => t.done).length;
   const todayCount = tasks.filter(t => t.dueDate === today && !t.done).length;
+
+  const renderDateGroup = (date: string) => {
+    const { label, tag, tagType } = formatDateLabel(date, today);
+    const isOpen = collapsed[date] !== true;
+    const items = grouped.map[date];
+    return (
+      <div key={date} className={styles.dateGroup}>
+        <div className={styles.dateHeader}>
+          <button className={styles.dateToggle} onClick={() => toggleCollapse(date)}>
+            {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+          <span className={styles.dateLabel}>{label}</span>
+          {tag && <span className={`${styles.dateTag} ${styles[`tag_${tagType}`]}`}>{tag}</span>}
+          <span className={styles.dateCount}>{items.filter(t => !t.done).length}개</span>
+          {/* 날짜 섹션에서 상세 추가 버튼 */}
+          <button className={styles.dateAddBtn} onClick={() => openModal(date)} title="이 날짜에 추가">
+            <Plus size={13} />
+          </button>
+        </div>
+
+        {isOpen && (
+          <div className={styles.dateItems}>
+            {items.map(task => (
+              <TaskRow key={task.id} task={task} today={today}
+                onToggle={() => toggleTask(task.id)}
+                onDelete={() => deleteTask(task.id)}
+              />
+            ))}
+            {/* 인라인 빠른 추가 */}
+            <div className={styles.inlineAdd}>
+              <input
+                className={styles.inlineInput}
+                placeholder="+ 빠르게 추가 (Enter)"
+                value={inlineInputs[date] || ''}
+                onChange={e => setInlineInputs(p => ({ ...p, [date]: e.target.value }))}
+                onKeyDown={e => { if (e.key === 'Enter') handleInlineAdd(date); }}
+              />
+              {(inlineInputs[date] || '').trim() && (
+                <button className={styles.inlineSubmit} onClick={() => handleInlineAdd(date)}>추가</button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className={styles.page}>
@@ -87,7 +149,6 @@ export default function Tasks() {
           <p className={styles.subtitle}>{pendingCount}개 남음 · {doneCount}개 완료</p>
         </div>
         <div className={styles.headerRight}>
-          {/* 뷰 토글 */}
           <div className={styles.viewToggle}>
             <button className={`${styles.viewBtn} ${viewMode === 'date' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('date')}>
               <Calendar size={13} /> 날짜별
@@ -99,13 +160,13 @@ export default function Tasks() {
           <button className={styles.exportBtn} onClick={() => exportTasks(tasks)}>
             <Download size={14} /> CSV
           </button>
-          <button className={styles.addBtn} onClick={() => setModalOpen(true)}>
+          <button className={styles.addBtn} onClick={() => openModal()}>
             <Plus size={14} /> 할 일 추가
           </button>
         </div>
       </div>
 
-      {/* 탭 필터 */}
+      {/* 탭 */}
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${tabFilter === 'today' ? styles.tabActive : ''}`} onClick={() => setTabFilter('today')}>
           오늘 <span className={styles.tabBadge}>{todayCount}</span>
@@ -123,88 +184,61 @@ export default function Tasks() {
       </div>
 
       {viewMode === 'date' ? (
-        /* 날짜별 그룹 뷰 */
         <div className={styles.dateGroups}>
           {grouped.sortedDates.length === 0 && grouped.noDate.length === 0 && (
             <div className={styles.emptyState}>할 일이 없습니다 🎉</div>
           )}
-
-          {/* 날짜 초과 항목 먼저 */}
-          {grouped.sortedDates.filter(d => d < today).map(date => {
-            const { label, tag, tagType } = formatDateLabel(date, today);
-            const isOpen = collapsed[date] !== true;
-            const items = grouped.map[date];
-            return (
-              <div key={date} className={styles.dateGroup}>
-                <button className={styles.dateHeader} onClick={() => toggleCollapse(date)}>
-                  <span className={styles.dateLabel}>{label}</span>
-                  {tag && <span className={`${styles.dateTag} ${styles[`tag_${tagType}`]}`}>{tag}</span>}
-                  <span className={styles.dateCount}>{items.filter(t => !t.done).length}개</span>
-                  {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                </button>
-                {isOpen && (
-                  <div className={styles.dateItems}>
-                    {items.map(task => <TaskRow key={task.id} task={task} today={today} onToggle={() => toggleTask(task.id)} />)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
+          {/* 기한 초과 */}
+          {grouped.sortedDates.filter(d => d < today).map(renderDateGroup)}
           {/* 오늘 이후 */}
-          {grouped.sortedDates.filter(d => d >= today).map(date => {
-            const { label, tag, tagType } = formatDateLabel(date, today);
-            const isOpen = collapsed[date] !== true;
-            const items = grouped.map[date];
-            return (
-              <div key={date} className={styles.dateGroup}>
-                <button className={styles.dateHeader} onClick={() => toggleCollapse(date)}>
-                  <span className={styles.dateLabel}>{label}</span>
-                  {tag && <span className={`${styles.dateTag} ${styles[`tag_${tagType}`]}`}>{tag}</span>}
-                  <span className={styles.dateCount}>{items.filter(t => !t.done).length}개</span>
-                  {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                </button>
-                {isOpen && (
-                  <div className={styles.dateItems}>
-                    {items.map(task => <TaskRow key={task.id} task={task} today={today} onToggle={() => toggleTask(task.id)} />)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* 날짜 없는 항목 */}
+          {grouped.sortedDates.filter(d => d >= today).map(renderDateGroup)}
+          {/* 날짜 미지정 */}
           {grouped.noDate.length > 0 && (
             <div className={styles.dateGroup}>
-              <button className={styles.dateHeader} onClick={() => toggleCollapse('nodate')}>
+              <div className={styles.dateHeader}>
+                <button className={styles.dateToggle} onClick={() => toggleCollapse('nodate')}>
+                  {collapsed['nodate'] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                </button>
                 <span className={styles.dateLabel}>날짜 미지정</span>
                 <span className={styles.dateCount}>{grouped.noDate.length}개</span>
-                {collapsed['nodate'] ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-              </button>
+              </div>
               {!collapsed['nodate'] && (
                 <div className={styles.dateItems}>
-                  {grouped.noDate.map(task => <TaskRow key={task.id} task={task} today={today} onToggle={() => toggleTask(task.id)} />)}
+                  {grouped.noDate.map(task => (
+                    <TaskRow key={task.id} task={task} today={today}
+                      onToggle={() => toggleTask(task.id)}
+                      onDelete={() => deleteTask(task.id)}
+                    />
+                  ))}
                 </div>
               )}
             </div>
           )}
         </div>
       ) : (
-        /* 전체 리스트 뷰 */
         <div className={styles.listView}>
           {filteredTasks.length === 0 && <div className={styles.emptyState}>할 일이 없습니다 🎉</div>}
           {filteredTasks
-            .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
-            .map(task => <TaskRow key={task.id} task={task} today={today} onToggle={() => toggleTask(task.id)} />)
+            .sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''))
+            .map(task => (
+              <TaskRow key={task.id} task={task} today={today}
+                onToggle={() => toggleTask(task.id)}
+                onDelete={() => deleteTask(task.id)}
+              />
+            ))
           }
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="할 일 추가">
+      {/* 추가 모달 */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={modalDate ? `${modalDate} 할 일 추가` : '할 일 추가'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.field}>
             <label className={f.label}>내용 *</label>
-            <input className={f.input} placeholder="예: 제안서 검토 후 발송" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} autoFocus />
+            <input className={f.input} placeholder="예: 제안서 검토 후 발송" value={form.title}
+              onChange={e => setForm(p => ({...p, title: e.target.value}))}
+              onKeyDown={e => { if (e.key === 'Enter') handleModalAdd(); }}
+              autoFocus />
           </div>
           <div className={f.field}>
             <label className={f.label}>날짜</label>
@@ -234,7 +268,7 @@ export default function Tasks() {
           </div>
           <div className={f.actions}>
             <button className={f.btnSecondary} onClick={() => setModalOpen(false)}>취소</button>
-            <button className={f.btnPrimary} onClick={handleAdd}>추가</button>
+            <button className={f.btnPrimary} onClick={handleModalAdd}>추가</button>
           </div>
         </div>
       </Modal>
@@ -242,20 +276,23 @@ export default function Tasks() {
   );
 }
 
-function TaskRow({ task, today, onToggle }: { task: Task; today: string; onToggle: () => void }) {
+function TaskRow({ task, today, onToggle, onDelete }: { task: Task; today: string; onToggle: () => void; onDelete: () => void }) {
   const overdue = !task.done && task.dueDate < today;
   return (
-    <div className={`${styles.taskRow} ${task.done ? styles.done : ''} ${overdue ? styles.overdue : ''}`} onClick={onToggle}>
-      <div className={`${styles.check} ${task.done ? styles.checked : ''}`}>
+    <div className={`${styles.taskRow} ${task.done ? styles.done : ''} ${overdue ? styles.overdue : ''}`}>
+      <div className={`${styles.check} ${task.done ? styles.checked : ''}`} onClick={onToggle}>
         {task.done && <Check size={11} strokeWidth={3} />}
       </div>
-      <div className={styles.taskBody}>
+      <div className={styles.taskBody} onClick={onToggle}>
         <span className={styles.taskTitle}>{task.title}</span>
         {task.linkedTo && (
           <span className={styles.taskLink}>{task.linkedTo.type === 'lead' ? '🤝' : '📁'} {task.linkedTo.name}</span>
         )}
       </div>
       {overdue && <AlertCircle size={13} className={styles.overdueIcon} />}
+      <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(); }} title="삭제">
+        <Trash2 size={13} />
+      </button>
     </div>
   );
 }

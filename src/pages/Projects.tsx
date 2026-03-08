@@ -62,11 +62,11 @@ export default function Projects() {
           const pct = total === 0 ? 0 : Math.round((done / total) * 100);
           return (
             <div key={project.id} className={styles.projectCard}>
-              <div className={styles.projectHeader} onClick={() => toggle(project.id)}>
+              <div className={styles.projectHeader} onClick={() => navigate(`/projects/${project.id}`)} style={{cursor:"pointer"}}>
                 <div className={styles.projectLeft}>
                   <div className={styles.projectDot} style={{ background: project.color }} />
                   <div>
-                    <div className={styles.projectName} onClick={e => { e.stopPropagation(); navigate(`/projects/${project.id}`); }} style={{cursor:'pointer'}}>{project.name}</div>
+                    <div className={styles.projectName}>{project.name}</div>
                     <div className={styles.projectMeta}>{done}/{total} 완료 · {pct}%</div>
                   </div>
                 </div>
@@ -80,7 +80,7 @@ export default function Projects() {
                   <button className={styles.deleteProjectBtn} onClick={e => { e.stopPropagation(); if(confirm(`"${project.name}" 프로젝트를 삭제할까요?`)) deleteProject(project.id); }}>
                     <Trash2 size={13} />
                   </button>
-                  {expanded[project.id] ? <ChevronDown size={15} className={styles.chevron} /> : <ChevronRight size={15} className={styles.chevron} />}
+                  {<span onClick={e => { e.stopPropagation(); toggle(project.id); }} style={{display:"flex",alignItems:"center"}}>{expanded[project.id] ? <ChevronDown size={15} className={styles.chevron} /> : <ChevronRight size={15} className={styles.chevron} />}</span>}
                 </div>
               </div>
 

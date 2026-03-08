@@ -44,6 +44,11 @@ export default function ProjectDetail() {
   const totalIssues = project.issues.length;
   const pct = totalIssues === 0 ? 0 : Math.round((doneIssues / totalIssues) * 100);
 
+  const totalMM = projectMembers.reduce((sum, m) => {
+    const mm = calcMM(m.startDate, m.endDate, m.utilization);
+    return sum + (mm || 0);
+  }, 0);
+
   const totalMonthlyCost = projectMembers
     .filter(m => m.type === 'external' && m.monthlyRate)
     .reduce((sum, m) => sum + (m.monthlyRate || 0), 0);
@@ -115,6 +120,12 @@ export default function ProjectDetail() {
             <span className={styles.summaryLabel}>투입 인력</span>
             <span className={styles.summaryVal}>{projectMembers.filter(m => !m.endDate || m.endDate >= new Date().toISOString().split('T')[0]).length}명</span>
           </div>
+          {totalMM > 0 && (
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>총 M/M</span>
+              <span className={styles.summaryVal}>{Math.round(totalMM * 10) / 10}</span>
+            </div>
+          )}
           {totalMonthlyCost > 0 && (
             <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>월 외주비</span>
@@ -309,6 +320,16 @@ export default function ProjectDetail() {
   );
 }
 
+
+// M/M 계산: 1일 = 0.05 M/M, 투입률 반영
+function calcMM(startDate?: string, endDate?: string, utilization = 100): number | null {
+  if (!startDate) return null;
+  const end = endDate ? new Date(endDate + 'T00:00:00') : new Date();
+  const start = new Date(startDate + 'T00:00:00');
+  const days = Math.max(0, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  return Math.round(days * 0.05 * (utilization / 100) * 10) / 10;
+}
+
 function MemberCard({ member, onEdit, onDelete }: { member: ProjectMember; onEdit: () => void; onDelete: () => void }) {
   const today = new Date().toISOString().split('T')[0];
   const isActive = !member.endDate || member.endDate >= today;
@@ -330,6 +351,10 @@ function MemberCard({ member, onEdit, onDelete }: { member: ProjectMember; onEdi
         </div>
       </div>
       <div className={styles.memberRight}>
+        {(() => {
+          const mm = calcMM(member.startDate, member.endDate, member.utilization);
+          return mm !== null ? <div className={styles.mmBadge}>{mm} M/M</div> : null;
+        })()}
         {member.monthlyRate && (
           <div className={styles.monthlyRate}>{(member.monthlyRate / 10000).toLocaleString()}만원/월</div>
         )}

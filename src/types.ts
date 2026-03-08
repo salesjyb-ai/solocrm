@@ -54,3 +54,17 @@ export interface Activity {
   content: string;
   createdAt: string;
 }
+
+export type BossItemType = 'question' | 'task' | 'memo';
+
+export interface BossItem {
+  id: string;
+  type: BossItemType;
+  title: string;
+  content?: string;
+  priority: Priority;
+  dueDate?: string;
+  done: boolean;
+  projectId?: string;
+  createdAt: string;
+}

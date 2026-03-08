@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType } from '../types';
+import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem } from '../types';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -9,6 +9,10 @@ interface AppContextType {
   tasks: Task[];
   activities: Activity[];
   session: Session | null;
+  bossItems: BossItem[];
+  addBossItem: (item: Omit<BossItem, 'id' | 'createdAt'>) => Promise<void>;
+  updateBossItem: (id: string, fields: Partial<BossItem>) => Promise<void>;
+  deleteBossItem: (id: string) => Promise<void>;
   loading: boolean;
   theme: 'light' | 'dark';
   signOut: () => Promise<void>;
@@ -82,6 +86,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [bossItems, setBossItems] = useState<BossItem[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>(() =>
@@ -94,6 +99,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
+  const addBossItem = async (item: Omit<BossItem, 'id' | 'createdAt'>) => {
+    const { data } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
+    if (data) setBossItems(prev => [{ id: data.id, type: data.type, title: data.title, content: data.content, priority: data.priority, dueDate: data.due_date, done: data.done, projectId: data.project_id, createdAt: data.created_at }, ...prev]);
+  };
+  const updateBossItem = async (id: string, fields: Partial<BossItem>) => {
+    const dbFields: Record<string, unknown> = {};
+    if (fields.title !== undefined) dbFields.title = fields.title;
+    if (fields.content !== undefined) dbFields.content = fields.content;
+    if (fields.priority !== undefined) dbFields.priority = fields.priority;
+    if (fields.dueDate !== undefined) dbFields.due_date = fields.dueDate;
+    if (fields.done !== undefined) dbFields.done = fields.done;
+    if (fields.projectId !== undefined) dbFields.project_id = fields.projectId;
+    await supabase.from('crm_boss_items').update(dbFields).eq('id', id);
+    setBossItems(prev => prev.map(i => i.id === id ? { ...i, ...fields } : i));
+  };
+  const deleteBossItem = async (id: string) => {
+    await supabase.from('crm_boss_items').delete().eq('id', id);
+    setBossItems(prev => prev.filter(i => i.id !== id));
+  };
   const signOut = async () => { await supabase.auth.signOut(); setLeads([]); setProjects([]); setTasks([]); setActivities([]); };
 
   // auth 세션 감지
@@ -109,18 +133,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!session) { setLoading(false); return; }
     async function fetchAll() {
       setLoading(true);
-      const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes] = await Promise.all([
+      const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes] = await Promise.all([
         supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
         supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
         supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
         supabase.from('crm_tasks').select('*').order('due_date', { ascending: true }),
         supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
+        supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
       ]);
       const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
       setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
       setProjects((projectsRes.data || []).map(r => rowToProject(r as Record<string, unknown>, issues)));
       setTasks((tasksRes.data || []).map(r => rowToTask(r as Record<string, unknown>)));
       setActivities((activitiesRes.data || []).map(r => rowToActivity(r as Record<string, unknown>)));
+      setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
       setLoading(false);
     }
     fetchAll();
@@ -226,7 +252,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue, toggleTask, addTask, addActivity, getLeadActivities }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue, toggleTask, addTask, addActivity, getLeadActivities }}>
       {children}
     </AppContext.Provider>
   );

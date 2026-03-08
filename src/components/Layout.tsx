@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderKanban, CheckSquare, Kanban, Sun, Moon, Zap, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, FolderKanban, CheckSquare, Kanban, Sun, Moon, Zap, LogOut, UserCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import styles from './Layout.module.css';
 
@@ -10,6 +10,7 @@ const nav = [
   { path: '/projects', label: '프로젝트', icon: FolderKanban },
   { path: '/tasks', label: '할 일', icon: CheckSquare },
   { path: '/kanban', label: '칸반', icon: Kanban },
+  { path: '/boss', label: '상무님 관리', icon: UserCheck },
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {

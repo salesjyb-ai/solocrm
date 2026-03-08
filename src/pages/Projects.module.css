@@ -1,0 +1,49 @@
+.page { padding: 32px; max-width: 900px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 12px; }
+.title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.subtitle { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+.addBtn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #fff; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; transition: opacity var(--transition); white-space: nowrap; }
+.addBtn:hover { opacity: 0.85; }
+
+.projectList { display: flex; flex-direction: column; gap: 16px; }
+.projectCard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.projectHeader { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; transition: background var(--transition); gap: 12px; }
+.projectHeader:hover { background: var(--surface-hover); }
+.projectLeft { display: flex; align-items: center; gap: 12px; }
+.projectDot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.projectName { font-size: 14px; font-weight: 600; }
+.projectMeta { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+.projectRight { display: flex; align-items: center; gap: 12px; }
+.progressWrap { width: 100px; }
+.progressBar { height: 5px; background: var(--bg-secondary); border-radius: 99px; overflow: hidden; }
+.progressFill { height: 100%; border-radius: 99px; }
+.issueAddBtn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: var(--radius-xs); font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-light); transition: opacity var(--transition); white-space: nowrap; }
+.issueAddBtn:hover { opacity: 0.8; }
+.chevron { color: var(--text-muted); }
+
+.issueTable { border-top: 1px solid var(--border-subtle); }
+.issueTable table { width: 100%; border-collapse: collapse; }
+.issueTable th { padding: 8px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; background: var(--bg); border-bottom: 1px solid var(--border-subtle); }
+.issueTable td { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+.issueRow:last-child td { border-bottom: none; }
+.issueRow:hover td { background: var(--surface-hover); }
+.issueDone .issueTitleCell { text-decoration: line-through; color: var(--text-muted); }
+.issueTitleCell { font-size: 13px; }
+.priority { font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+.dateCell { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.na { color: var(--text-muted); }
+.deleteBtn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-xs); color: var(--text-muted); transition: all var(--transition); }
+.deleteBtn:hover { background: var(--status-lost-bg); color: var(--status-lost); }
+.emptyRow { text-align: center; color: var(--text-muted); padding: 24px; font-size: 13px; }
+.emptyState { text-align: center; padding: 64px 32px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 16px; }
+@media (max-width: 768px) { .page { padding: 16px; } .progressWrap { display: none; } }
+.exportBtn { display: flex; align-items: center; gap: 7px; background: var(--bg-secondary); color: var(--text-secondary); padding: 9px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; border: 1px solid var(--border); transition: all var(--transition); white-space: nowrap; }
+.exportBtn:hover { border-color: var(--accent-muted); color: var(--accent); background: var(--accent-light); }
+
+.deleteProjectBtn {
+  display: flex; align-items: center; justify-content: center;
+  padding: 6px; border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  transition: color var(--transition), background var(--transition);
+}
+.deleteProjectBtn:hover { color: var(--status-lost); background: var(--status-lost-bg); }

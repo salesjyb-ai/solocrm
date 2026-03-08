@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f5f4f0;
+  --bg-secondary: #eeecea;
+  --surface: #ffffff;
+  --surface-hover: #f9f8f6;
+  --border: #e2e0db;
+  --border-subtle: #ece9e3;
+  --text-primary: #1a1916;
+  --text-secondary: #6b6860;
+  --text-muted: #a09d97;
+  --accent: #2d6a4f;
+  --accent-light: #d8f3dc;
+  --accent-muted: #52b788;
+  --accent2: #e07a5f;
+  --accent2-light: #fde8e2;
+  --accent3: #3d405b;
+  --accent3-light: #e8e9f0;
+  --status-new: #f4a261;
+  --status-new-bg: #fef3e8;
+  --status-contact: #4895ef;
+  --status-contact-bg: #e8f4fd;
+  --status-proposal: #7b2d8b;
+  --status-proposal-bg: #f3e8f6;
+  --status-won: #2d6a4f;
+  --status-won-bg: #d8f3dc;
+  --status-lost: #e07a5f;
+  --status-lost-bg: #fde8e2;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  --sidebar-width: 220px;
+  --transition: 0.15s ease;
+}
+
+[data-theme="dark"] {
+  --bg: #13120f;
+  --bg-secondary: #1a1916;
+  --surface: #201f1b;
+  --surface-hover: #272520;
+  --border: #2e2c27;
+  --border-subtle: #252320;
+  --text-primary: #f0ede6;
+  --text-secondary: #9e9b93;
+  --text-muted: #5e5c56;
+  --accent-light: #1a3328;
+  --accent2-light: #3d2118;
+  --accent3-light: #1e1f2a;
+  --status-new-bg: #2e1e0e;
+  --status-contact-bg: #0e1e2e;
+  --status-proposal-bg: #1e0e22;
+  --status-won-bg: #0e2018;
+  --status-lost-bg: #2e1410;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+button { font-family: 'Sora', sans-serif; cursor: pointer; border: none; background: none; font-size: inherit; }
+input, textarea, select { font-family: 'Sora', sans-serif; font-size: 14px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }

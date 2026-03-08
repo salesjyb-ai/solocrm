@@ -10,6 +10,7 @@ import Projects from './pages/Projects';
 import Tasks from './pages/Tasks';
 import Kanban from './pages/Kanban';
 import Boss from './pages/Boss';
+import ProjectDetail from './pages/ProjectDetail';
 import './index.css';
 
 function AppRoutes() {
@@ -25,6 +26,7 @@ function AppRoutes() {
         <Route path="/leads" element={<Leads />} />
         <Route path="/leads/:id" element={<LeadDetail />} />
         <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/kanban" element={<Kanban />} />
         <Route path="/boss" element={<Boss />} />

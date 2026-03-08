@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { IssueStatusSelect } from '../components/StatusBadge';
@@ -13,6 +14,7 @@ const priorityColor: Record<Priority, string> = { low: 'var(--text-muted)', medi
 const projectColors = ['#2d6a4f','#e07a5f','#3d405b','#4895ef','#7b2d8b','#f4a261'];
 
 export default function Projects() {
+  const navigate = useNavigate();
   const { projects, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue } = useApp();
   const [expanded, setExpanded] = useState<Record<string, boolean>>(Object.fromEntries(projects.map(p => [p.id, true])));
   const [addProjectModal, setAddProjectModal] = useState(false);
@@ -64,7 +66,7 @@ export default function Projects() {
                 <div className={styles.projectLeft}>
                   <div className={styles.projectDot} style={{ background: project.color }} />
                   <div>
-                    <div className={styles.projectName}>{project.name}</div>
+                    <div className={styles.projectName} onClick={() => navigate(`/projects/${project.id}`)} style={{cursor:'pointer'}}>{project.name}</div>
                     <div className={styles.projectMeta}>{done}/{total} 완료 · {pct}%</div>
                   </div>
                 </div>

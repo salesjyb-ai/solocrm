@@ -75,3 +75,21 @@ export interface BossItem {
   projectId?: string;
   createdAt: string;
 }
+
+export type MemberType = 'internal' | 'external';
+
+export interface ProjectMember {
+  id: string;
+  projectId: string;
+  name: string;
+  type: MemberType;
+  role?: string;
+  company?: string;
+  contractType?: string;
+  monthlyRate?: number;
+  startDate?: string;
+  endDate?: string;
+  utilization: number;
+  notes?: string;
+  createdAt: string;
+}

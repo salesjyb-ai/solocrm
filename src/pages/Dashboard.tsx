@@ -119,7 +119,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 기존{/* 기존 3섹션 */}
+      {/* 3섹션 */}
       <div className={styles.grid}>
         <section className={styles.section}>
           <div className={styles.sectionHeader}>

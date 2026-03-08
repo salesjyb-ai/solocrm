@@ -118,7 +118,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await supabase.from('crm_boss_items').delete().eq('id', id);
     setBossItems(prev => prev.filter(i => i.id !== id));
   };
-  const signOut = async () => { await supabase.auth.signOut(); setLeads([]); setProjects([]); setTasks([]); setActivities([]); };
+  const signOut = async () => { await supabase.auth.signOut(); setLeads([]); setProjects([]); setTasks([]); setActivities([]); setBossItems([]); };
 
   // auth 세션 감지
   useEffect(() => {

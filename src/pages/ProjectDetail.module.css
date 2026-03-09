@@ -42,9 +42,9 @@
 .issueTitle { font-size: 13.5px; }
 .statusSelect { font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-xs); background: var(--surface); color: var(--text-primary); cursor: pointer; }
 .priority { font-size: 12px; font-weight: 600; }
-.p_high { color: var(--status-lost); }
-.p_medium { color: #d97706; }
-.p_low { color: var(--status-new); }
+.p_high { color: var(--accent2); }
+.p_medium { color: var(--status-contact); }
+.p_low { color: var(--text-muted); }
 .dueDate { font-size: 12px; color: var(--text-muted); }
 .deleteBtn { opacity: 0; color: var(--text-muted); padding: 4px; border-radius: var(--radius-xs); transition: all var(--transition); display: flex; align-items: center; }
 .deleteBtn:hover { color: var(--status-lost); background: var(--status-lost-bg); }

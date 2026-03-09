@@ -18,7 +18,7 @@ const PRIORITY_COLOR: Record<Priority, string> = {
 const PRIORITY_LABEL: Record<Priority, string> = { low: '낮음', medium: '보통', high: '높음' };
 
 export default function Kanban() {
-  const { projects, addIssue, updateIssueStatus, deleteIssue } = useApp();
+  const { projects, addIssue, updateIssue, updateIssueStatus, deleteIssue } = useApp();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || '');
   const [addModal, setAddModal] = useState<IssueStatus | null>(null);
   const [issueForm, setIssueForm] = useState({ title: '', priority: 'medium' as Priority, dueDate: '' });
@@ -26,6 +26,8 @@ export default function Kanban() {
   // drag state
   const dragging = useRef<{ issueId: string; fromStatus: IssueStatus } | null>(null);
   const [dragOver, setDragOver] = useState<IssueStatus | null>(null);
+  const [editIssue, setEditIssue] = useState<Issue | null>(null);
+  const [eForm, setEForm] = useState({ title: '', status: 'todo' as IssueStatus, priority: 'medium' as Priority, dueDate: '', assignee: '', memo: '' });
   const [dragOverIssueId, setDragOverIssueId] = useState<string | null>(null);
 
   const project = projects.find(p => p.id === selectedProjectId);
@@ -154,7 +156,7 @@ export default function Kanban() {
                         >
                           <div className={styles.cardTop}>
                             <GripVertical size={13} className={styles.grip} />
-                            <span className={styles.cardTitle}>{issue.title}</span>
+                            <span className={styles.cardTitle} onClick={e => { e.stopPropagation(); setEForm({ title: issue.title, status: issue.status, priority: issue.priority, dueDate: issue.dueDate || '', assignee: issue.assignee || '', memo: issue.memo || '' }); setEditIssue(issue); }} style={{cursor:'pointer', flex:1}}>{issue.title}</span>
                             <button
                               className={styles.cardDelete}
                               onClick={() => deleteIssue(project.id, issue.id)}
@@ -227,6 +229,56 @@ export default function Kanban() {
           <div className={f.actions}>
             <button className={f.btnSecondary} onClick={() => setAddModal(null)}>취소</button>
             <button className={f.btnPrimary} onClick={handleAddIssue}>추가</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 이슈 수정 모달 */}
+      <Modal open={!!editIssue} onClose={() => setEditIssue(null)} title="이슈 수정">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className={f.field}>
+            <label className={f.label}>제목 *</label>
+            <input className={f.input} value={eForm.title} onChange={e => setEForm(p => ({...p, title: e.target.value}))} autoFocus />
+          </div>
+          <div className={f.row}>
+            <div className={f.field}>
+              <label className={f.label}>상태</label>
+              <select className={f.select} value={eForm.status} onChange={e => setEForm(p => ({...p, status: e.target.value as IssueStatus}))}>
+                <option value="todo">할 일</option>
+                <option value="in_progress">진행중</option>
+                <option value="done">완료</option>
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>우선순위</label>
+              <select className={f.select} value={eForm.priority} onChange={e => setEForm(p => ({...p, priority: e.target.value as Priority}))}>
+                <option value="high">높음</option>
+                <option value="medium">보통</option>
+                <option value="low">낮음</option>
+              </select>
+            </div>
+          </div>
+          <div className={f.row}>
+            <div className={f.field}>
+              <label className={f.label}>마감일</label>
+              <input className={f.input} type="date" value={eForm.dueDate} onChange={e => setEForm(p => ({...p, dueDate: e.target.value}))} />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>담당자</label>
+              <input className={f.input} placeholder="담당자 이름" value={eForm.assignee} onChange={e => setEForm(p => ({...p, assignee: e.target.value}))} />
+            </div>
+          </div>
+          <div className={f.field}>
+            <label className={f.label}>메모</label>
+            <textarea className={f.textarea} rows={3} placeholder="메모를 입력하세요..." value={eForm.memo} onChange={e => setEForm(p => ({...p, memo: e.target.value}))} />
+          </div>
+          <div className={f.actions}>
+            <button className={f.btnSecondary} onClick={() => setEditIssue(null)}>취소</button>
+            <button className={f.btnPrimary} onClick={async () => {
+              if (!eForm.title.trim() || !editIssue) return;
+              await updateIssue(editIssue.id, { title: eForm.title, status: eForm.status, priority: eForm.priority, dueDate: eForm.dueDate, assignee: eForm.assignee, memo: eForm.memo });
+              setEditIssue(null);
+            }}>저장</button>
           </div>
         </div>
       </Modal>

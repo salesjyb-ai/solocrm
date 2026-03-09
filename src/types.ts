@@ -25,6 +25,7 @@ export interface Issue {
   priority: Priority;
   dueDate?: string;
   assignee?: string;
+  memo?: string;
   createdAt: string;
 }
 

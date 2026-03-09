@@ -24,6 +24,7 @@ interface AppContextType {
   addProject: (name: string, color: string) => Promise<void>;
   addIssue: (projectId: string, issue: Omit<Issue, 'id' | 'projectId' | 'createdAt'>) => Promise<void>;
   updateIssueStatus: (projectId: string, issueId: string, status: IssueStatus) => Promise<void>;
+  updateIssue: (issueId: string, fields: { title?: string; status?: IssueStatus; priority?: Issue['priority']; dueDate?: string; assignee?: string; memo?: string }) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   members: ProjectMember[];
   addMember: (member: Omit<ProjectMember, 'id' | 'createdAt'>) => Promise<void>;
@@ -56,7 +57,10 @@ function rowToIssue(r: Record<string, unknown>): Issue {
   return {
     id: r.id as string, projectId: r.project_id as string, title: r.title as string,
     status: r.status as IssueStatus, priority: r.priority as Issue['priority'],
-    dueDate: r.due_date as string | undefined, createdAt: (r.created_at as string).split('T')[0],
+    dueDate: r.due_date as string | undefined,
+    assignee: r.assignee as string | undefined,
+    memo: r.memo as string | undefined,
+    createdAt: (r.created_at as string).split('T')[0],
   };
 }
 
@@ -310,6 +314,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await supabase.from('crm_issues').update({ status }).eq('id', issueId);
   };
 
+  const updateIssue = async (issueId: string, fields: { title?: string; status?: IssueStatus; priority?: Issue['priority']; dueDate?: string; assignee?: string; memo?: string }) => {
+    const db: Record<string, unknown> = {};
+    if (fields.title !== undefined) db.title = fields.title;
+    if (fields.status !== undefined) db.status = fields.status;
+    if (fields.priority !== undefined) db.priority = fields.priority;
+    if (fields.dueDate !== undefined) db.due_date = fields.dueDate || null;
+    if (fields.assignee !== undefined) db.assignee = fields.assignee || null;
+    if (fields.memo !== undefined) db.memo = fields.memo || null;
+    await supabase.from('crm_issues').update(db).eq('id', issueId);
+  };
+
   const deleteProject = async (projectId: string) => {
     await supabase.from('crm_projects').delete().eq('id', projectId);
   };
@@ -346,7 +361,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities }}>
       {children}
     </AppContext.Provider>
   );

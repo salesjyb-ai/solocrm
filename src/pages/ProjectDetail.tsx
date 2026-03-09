@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Users, ListTodo, Edit2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import type { ProjectMember, MemberType } from '../types';
+import type { ProjectMember, MemberType, Issue, IssueStatus } from '../types';
 import Modal from '../components/Modal';
 import f from './FormField.module.css';
 import styles from './ProjectDetail.module.css';
@@ -15,7 +15,7 @@ const UTILIZATION_OPTIONS = [25, 50, 75, 100];
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { projects, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue } = useApp();
+  const { projects, members, addMember, updateMember, deleteMember, addIssue, updateIssue, updateIssueStatus, deleteIssue } = useApp();
 
   const project = projects.find(p => p.id === id);
   const projectMembers = members.filter(m => m.projectId === id);
@@ -24,6 +24,8 @@ export default function ProjectDetail() {
   const [memberModal, setMemberModal] = useState(false);
   const [editingMember, setEditingMember] = useState<ProjectMember | null>(null);
   const [issueModal, setIssueModal] = useState(false);
+  const [editIssueModal, setEditIssueModal] = useState<Issue | null>(null);
+  const [eForm, setEForm] = useState({ title: '', status: 'todo' as IssueStatus, priority: 'medium' as Issue['priority'], dueDate: '', assignee: '', memo: '' });
 
   const [mForm, setMForm] = useState({
     name: '', type: 'internal' as MemberType, role: '', company: '',
@@ -163,9 +165,12 @@ export default function ProjectDetail() {
             </div>
             {project.issues.length === 0 && <div className={styles.empty}>이슈가 없습니다.</div>}
             {project.issues.map(issue => (
-              <div key={issue.id} className={styles.tableRow}>
+              <div key={issue.id} className={styles.tableRow} onClick={() => {
+                setEForm({ title: issue.title, status: issue.status, priority: issue.priority, dueDate: issue.dueDate || '', assignee: issue.assignee || '', memo: issue.memo || '' });
+                setEditIssueModal(issue);
+              }} style={{cursor:'pointer'}}>
                 <span className={styles.issueTitle}>{issue.title}</span>
-                <span>
+                <span onClick={e => e.stopPropagation()}>
                   <select className={styles.statusSelect} value={issue.status}
                     onChange={e => updateIssueStatus(project.id, issue.id, e.target.value as 'todo' | 'in_progress' | 'done')}>
                     <option value="todo">할 일</option>
@@ -175,7 +180,7 @@ export default function ProjectDetail() {
                 </span>
                 <span className={`${styles.priority} ${styles[`p_${issue.priority}`]}`}>● {issue.priority === 'high' ? '높음' : issue.priority === 'medium' ? '중간' : '낮음'}</span>
                 <span className={styles.dueDate}>{issue.dueDate || '-'}</span>
-                <button className={styles.deleteBtn} onClick={() => deleteIssue(project.id, issue.id)}><Trash2 size={12} /></button>
+                <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); deleteIssue(project.id, issue.id); }}><Trash2 size={12} /></button>
               </div>
             ))}
           </div>
@@ -287,6 +292,56 @@ export default function ProjectDetail() {
         </div>
       </Modal>
 
+
+      {/* 이슈 수정 모달 */}
+      <Modal open={!!editIssueModal} onClose={() => setEditIssueModal(null)} title="이슈 수정">
+        <div className={f.form}>
+          <div className={f.field}>
+            <label className={f.label}>제목 *</label>
+            <input className={f.input} value={eForm.title} onChange={e => setEForm(p => ({...p, title: e.target.value}))} autoFocus />
+          </div>
+          <div className={f.row}>
+            <div className={f.field}>
+              <label className={f.label}>상태</label>
+              <select className={f.select} value={eForm.status} onChange={e => setEForm(p => ({...p, status: e.target.value as IssueStatus}))}>
+                <option value="todo">할 일</option>
+                <option value="in_progress">진행중</option>
+                <option value="done">완료</option>
+              </select>
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>우선순위</label>
+              <select className={f.select} value={eForm.priority} onChange={e => setEForm(p => ({...p, priority: e.target.value as Issue['priority']}))}>
+                <option value="high">높음</option>
+                <option value="medium">중간</option>
+                <option value="low">낮음</option>
+              </select>
+            </div>
+          </div>
+          <div className={f.row}>
+            <div className={f.field}>
+              <label className={f.label}>마감일</label>
+              <input className={f.input} type="date" value={eForm.dueDate} onChange={e => setEForm(p => ({...p, dueDate: e.target.value}))} />
+            </div>
+            <div className={f.field}>
+              <label className={f.label}>담당자</label>
+              <input className={f.input} placeholder="담당자 이름" value={eForm.assignee} onChange={e => setEForm(p => ({...p, assignee: e.target.value}))} />
+            </div>
+          </div>
+          <div className={f.field}>
+            <label className={f.label}>메모</label>
+            <textarea className={f.textarea} rows={3} placeholder="메모를 입력하세요..." value={eForm.memo} onChange={e => setEForm(p => ({...p, memo: e.target.value}))} />
+          </div>
+          <div className={f.actions}>
+            <button className={f.btnSecondary} onClick={() => setEditIssueModal(null)}>취소</button>
+            <button className={f.btnPrimary} onClick={async () => {
+              if (!eForm.title.trim() || !editIssueModal) return;
+              await updateIssue(editIssueModal.id, { title: eForm.title, status: eForm.status, priority: eForm.priority, dueDate: eForm.dueDate, assignee: eForm.assignee, memo: eForm.memo });
+              setEditIssueModal(null);
+            }}>저장</button>
+          </div>
+        </div>
+      </Modal>
       {/* 이슈 추가 모달 */}
       <Modal open={issueModal} onClose={() => setIssueModal(false)} title="이슈 추가">
         <div className={f.form}>

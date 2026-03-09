@@ -134,6 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   const deleteMember = async (id: string) => {
     await supabase.from('crm_project_members').delete().eq('id', id);
+    setMembers(prev => prev.filter(m => m.id !== id));
   };
 
   const addBossItem = async (item: Omit<BossItem, 'id' | 'createdAt'>) => {
@@ -151,6 +152,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
   const deleteBossItem = async (id: string) => {
     await supabase.from('crm_boss_items').delete().eq('id', id);
+    setBossItems(prev => prev.filter(b => b.id !== id));
   };
   const signOut = async () => { await supabase.auth.signOut(); setLeads([]); setProjects([]); setTasks([]); setActivities([]); setBossItems([]); setMembers([]); };
 
@@ -206,14 +208,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_leads' }, payload => {
         if (payload.eventType === 'INSERT') setLeads(prev => [rowToLead(payload.new as Record<string, unknown>), ...prev]);
         if (payload.eventType === 'UPDATE') setLeads(prev => prev.map(l => l.id === payload.new.id ? rowToLead(payload.new as Record<string, unknown>) : l));
-        if (payload.eventType === 'DELETE') setLeads(prev => prev.filter(l => l.id !== payload.old.id));
       })
 
       // projects
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_projects' }, payload => {
         if (payload.eventType === 'INSERT') setProjects(prev => [rowToProject(payload.new as Record<string, unknown>, []), ...prev]);
         if (payload.eventType === 'UPDATE') setProjects(prev => prev.map(p => p.id === payload.new.id ? { ...p, name: payload.new.name as string, color: payload.new.color as string, status: payload.new.status as Project['status'] } : p));
-        if (payload.eventType === 'DELETE') setProjects(prev => prev.filter(p => p.id !== payload.old.id));
       })
 
       // issues
@@ -221,20 +221,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const issue = rowToIssue(payload.new as Record<string, unknown>);
         if (payload.eventType === 'INSERT') setProjects(prev => prev.map(p => p.id === issue.projectId ? { ...p, issues: [...p.issues, issue] } : p));
         if (payload.eventType === 'UPDATE') setProjects(prev => prev.map(p => p.id === issue.projectId ? { ...p, issues: p.issues.map(i => i.id === issue.id ? issue : i) } : p));
-        if (payload.eventType === 'DELETE') setProjects(prev => prev.map(p => ({ ...p, issues: p.issues.filter(i => i.id !== (payload.old as Record<string, unknown>).id) })));
       })
 
       // tasks
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_tasks' }, payload => {
         if (payload.eventType === 'INSERT') setTasks(prev => [...prev, rowToTask(payload.new as Record<string, unknown>)]);
         if (payload.eventType === 'UPDATE') setTasks(prev => prev.map(t => t.id === payload.new.id ? rowToTask(payload.new as Record<string, unknown>) : t));
-        if (payload.eventType === 'DELETE') setTasks(prev => prev.filter(t => t.id !== payload.old.id));
       })
 
       // activities
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_activities' }, payload => {
         if (payload.eventType === 'INSERT') setActivities(prev => [rowToActivity(payload.new as Record<string, unknown>), ...prev]);
-        if (payload.eventType === 'DELETE') setActivities(prev => prev.filter(a => a.id !== payload.old.id));
       })
 
       // boss items
@@ -243,7 +240,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const toBoss = (r: Record<string, unknown>) => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string });
         if (payload.eventType === 'INSERT') setBossItems(prev => [toBoss(row), ...prev]);
         if (payload.eventType === 'UPDATE') setBossItems(prev => prev.map(b => b.id === row.id ? toBoss(row) : b));
-        if (payload.eventType === 'DELETE') setBossItems(prev => prev.filter(b => b.id !== payload.old.id));
       })
 
       // project members
@@ -252,7 +248,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const toMember = (r: Record<string, unknown>): ProjectMember => ({ id: r.id as string, projectId: r.project_id as string, name: r.name as string, type: r.type as ProjectMember['type'], role: r.role as string | undefined, company: r.company as string | undefined, contractType: r.contract_type as string | undefined, monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined, endDate: r.end_date as string | undefined, utilization: r.utilization as number, notes: r.notes as string | undefined, createdAt: r.created_at as string });
         if (payload.eventType === 'INSERT') setMembers(prev => [...prev, toMember(row)]);
         if (payload.eventType === 'UPDATE') setMembers(prev => prev.map(m => m.id === row.id ? toMember(row) : m));
-        if (payload.eventType === 'DELETE') setMembers(prev => prev.filter(m => m.id !== payload.old.id));
       })
 
       .subscribe();
@@ -327,10 +322,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteProject = async (projectId: string) => {
     await supabase.from('crm_projects').delete().eq('id', projectId);
+    setProjects(prev => prev.filter(p => p.id !== projectId));
   };
 
   const deleteIssue = async (_projectId: string, issueId: string) => {
     await supabase.from('crm_issues').delete().eq('id', issueId);
+    setProjects(prev => prev.map(p => ({ ...p, issues: p.issues.filter(i => i.id !== issueId) })));
   };
 
   const toggleTask = async (id: string) => {
@@ -345,6 +342,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteTask = async (id: string) => {
     await supabase.from('crm_tasks').delete().eq('id', id);
+    setTasks(prev => prev.filter(t => t.id !== id));
   };
 
   const addTask = async (task: Omit<Task, 'id'>) => {

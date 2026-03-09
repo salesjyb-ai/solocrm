@@ -16,7 +16,7 @@ const projectColors = ['#2d6a4f','#e07a5f','#3d405b','#4895ef','#7b2d8b','#f4a26
 export default function Projects() {
   const navigate = useNavigate();
   const { projects, addProject, deleteProject, addIssue, updateIssueStatus, deleteIssue } = useApp();
-  const [expanded, setExpanded] = useState<Record<string, boolean>>(Object.fromEntries(projects.map(p => [p.id, true])));
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [addProjectModal, setAddProjectModal] = useState(false);
   const [addIssueModal, setAddIssueModal] = useState<string | null>(null);
   const [projectForm, setProjectForm] = useState({ name: '', color: projectColors[0] });
@@ -80,11 +80,11 @@ export default function Projects() {
                   <button className={styles.deleteProjectBtn} onClick={e => { e.stopPropagation(); if(confirm(`"${project.name}" 프로젝트를 삭제할까요?`)) deleteProject(project.id); }}>
                     <Trash2 size={13} />
                   </button>
-                  {<span onClick={e => { e.stopPropagation(); toggle(project.id); }} style={{display:"flex",alignItems:"center"}}>{expanded[project.id] ? <ChevronDown size={15} className={styles.chevron} /> : <ChevronRight size={15} className={styles.chevron} />}</span>}
+                  {<span onClick={e => { e.stopPropagation(); toggle(project.id); }} style={{display:"flex",alignItems:"center"}}>{expanded[project.id] === true ? <ChevronDown size={15} className={styles.chevron} /> : <ChevronRight size={15} className={styles.chevron} />}</span>}
                 </div>
               </div>
 
-              {expanded[project.id] && (
+              {expanded[project.id] === true && (
                 <div className={styles.issueTable}>
                   <table>
                     <thead>

@@ -108,17 +108,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
   const addMember = async (member: Omit<ProjectMember, 'id' | 'createdAt'>) => {
-    const { data } = await supabase.from('crm_project_members').insert({
+    await supabase.from('crm_project_members').insert({
       project_id: member.projectId, name: member.name, type: member.type, role: member.role,
       company: member.company, contract_type: member.contractType, monthly_rate: member.monthlyRate,
       start_date: member.startDate, end_date: member.endDate, utilization: member.utilization, notes: member.notes,
-    }).select().single();
-    if (data) setMembers(prev => [...prev, {
-      id: data.id, projectId: data.project_id, name: data.name, type: data.type, role: data.role,
-      company: data.company, contractType: data.contract_type, monthlyRate: data.monthly_rate,
-      startDate: data.start_date, endDate: data.end_date, utilization: data.utilization,
-      notes: data.notes, createdAt: data.created_at,
-    }]);
+    });
   };
   const updateMember = async (id: string, fields: Partial<ProjectMember>) => {
     const db: Record<string, unknown> = {};
@@ -133,16 +127,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.utilization !== undefined) db.utilization = fields.utilization;
     if (fields.notes !== undefined) db.notes = fields.notes;
     await supabase.from('crm_project_members').update(db).eq('id', id);
-    setMembers(prev => prev.map(m => m.id === id ? { ...m, ...fields } : m));
   };
   const deleteMember = async (id: string) => {
     await supabase.from('crm_project_members').delete().eq('id', id);
-    setMembers(prev => prev.filter(m => m.id !== id));
   };
 
   const addBossItem = async (item: Omit<BossItem, 'id' | 'createdAt'>) => {
-    const { data } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
-    if (data) setBossItems(prev => [{ id: data.id, type: data.type, title: data.title, content: data.content, priority: data.priority, dueDate: data.due_date, done: data.done, projectId: data.project_id, createdAt: data.created_at }, ...prev]);
+    await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
   };
   const updateBossItem = async (id: string, fields: Partial<BossItem>) => {
     const dbFields: Record<string, unknown> = {};
@@ -153,11 +144,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.done !== undefined) dbFields.done = fields.done;
     if (fields.projectId !== undefined) dbFields.project_id = fields.projectId;
     await supabase.from('crm_boss_items').update(dbFields).eq('id', id);
-    setBossItems(prev => prev.map(i => i.id === id ? { ...i, ...fields } : i));
   };
   const deleteBossItem = async (id: string) => {
     await supabase.from('crm_boss_items').delete().eq('id', id);
-    setBossItems(prev => prev.filter(i => i.id !== id));
   };
   const signOut = async () => { await supabase.auth.signOut(); setLeads([]); setProjects([]); setTasks([]); setActivities([]); setBossItems([]); setMembers([]); };
 
@@ -269,12 +258,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ──────────────────────────────────────────────────────────
 
   const addLead = async (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const { data, error } = await supabase.from('crm_leads').insert({
+    await supabase.from('crm_leads').insert({
       name: lead.name, company: lead.company, contact: lead.contact, phone: lead.phone,
       value: lead.value, status: lead.status, notes: lead.notes,
       next_action: lead.nextAction, next_action_date: lead.nextActionDate || null,
     }).select().single();
-    if (!error && data) setLeads(prev => [rowToLead(data as Record<string, unknown>), ...prev]);
   };
 
   const updateLead = async (id: string, fields: Partial<Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>>) => {
@@ -288,91 +276,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.nextAction !== undefined) dbFields.next_action = fields.nextAction;
     if (fields.nextActionDate !== undefined) dbFields.next_action_date = fields.nextActionDate || null;
     if (fields.notes !== undefined) dbFields.notes = fields.notes;
-    const { error } = await supabase.from('crm_leads').update(dbFields).eq('id', id);
-    if (!error) setLeads(prev => prev.map(l => l.id === id ? { ...l, ...fields } : l));
+    await supabase.from('crm_leads').update(dbFields).eq('id', id);
   };
 
   const updateLeadStatus = async (id: string, status: LeadStatus, prevStatus?: LeadStatus) => {
     const { error } = await supabase.from('crm_leads').update({ status }).eq('id', id);
     if (!error) {
-      setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
       if (prevStatus && prevStatus !== status) {
         const content = `상태 변경: ${statusLabel[prevStatus]} → ${statusLabel[status]}`;
-        const { data } = await supabase.from('crm_activities').insert({ lead_id: id, type: 'status_change', content }).select().single();
-        if (data) setActivities(prev => [rowToActivity(data as Record<string, unknown>), ...prev]);
+        await supabase.from('crm_activities').insert({ lead_id: id, type: 'status_change', content });
       }
     }
   };
 
   const deleteLead = async (id: string) => {
-    const { error } = await supabase.from('crm_leads').delete().eq('id', id);
-    if (!error) {
-      setLeads(prev => prev.filter(l => l.id !== id));
-      setActivities(prev => prev.filter(a => a.leadId !== id));
-    }
+    await supabase.from('crm_leads').delete().eq('id', id);
+
   };
 
   const addProject = async (name: string, color: string) => {
-    const { data, error } = await supabase.from('crm_projects').insert({ name, color }).select().single();
-    if (!error && data) setProjects(prev => [rowToProject(data as Record<string, unknown>, []), ...prev]);
+    await supabase.from('crm_projects').insert({ name, color }).select().single();
   };
 
   const addIssue = async (projectId: string, issue: Omit<Issue, 'id' | 'projectId' | 'createdAt'>) => {
-    const { data, error } = await supabase.from('crm_issues').insert({
+    await supabase.from('crm_issues').insert({
       project_id: projectId, title: issue.title, status: issue.status,
       priority: issue.priority, due_date: issue.dueDate || null,
     }).select().single();
-    if (!error && data) {
-      const newIssue = rowToIssue(data as Record<string, unknown>);
-      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, issues: [...p.issues, newIssue] } : p));
-    }
+
   };
 
-  const updateIssueStatus = async (projectId: string, issueId: string, status: IssueStatus) => {
-    const { error } = await supabase.from('crm_issues').update({ status }).eq('id', issueId);
-    if (!error) setProjects(prev => prev.map(p => p.id === projectId
-      ? { ...p, issues: p.issues.map(i => i.id === issueId ? { ...i, status } : i) } : p));
+  const updateIssueStatus = async (_projectId: string, issueId: string, status: IssueStatus) => {
+    await supabase.from('crm_issues').update({ status }).eq('id', issueId);
   };
 
   const deleteProject = async (projectId: string) => {
     await supabase.from('crm_projects').delete().eq('id', projectId);
-    setProjects(prev => prev.filter(p => p.id !== projectId));
   };
 
-  const deleteIssue = async (projectId: string, issueId: string) => {
-    const { error } = await supabase.from('crm_issues').delete().eq('id', issueId);
-    if (!error) setProjects(prev => prev.map(p => p.id === projectId
-      ? { ...p, issues: p.issues.filter(i => i.id !== issueId) } : p));
+  const deleteIssue = async (_projectId: string, issueId: string) => {
+    await supabase.from('crm_issues').delete().eq('id', issueId);
   };
 
   const toggleTask = async (id: string) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
-    const { error } = await supabase.from('crm_tasks').update({ done: !task.done }).eq('id', id);
-    if (!error) setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+    await supabase.from('crm_tasks').update({ done: !task.done }).eq('id', id);
   };
 
   const updateTaskSubtasks = async (id: string, subtasks: Subtask[]) => {
     await supabase.from('crm_tasks').update({ subtasks }).eq('id', id);
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, subtasks } : t));
   };
 
   const deleteTask = async (id: string) => {
     await supabase.from('crm_tasks').delete().eq('id', id);
-    setTasks(prev => prev.filter(t => t.id !== id));
   };
 
   const addTask = async (task: Omit<Task, 'id'>) => {
-    const { data, error } = await supabase.from('crm_tasks').insert({
+    await supabase.from('crm_tasks').insert({
       title: task.title, done: task.done, due_date: task.dueDate,
       linked_type: task.linkedTo?.type || null, linked_id: task.linkedTo?.id || null, linked_name: task.linkedTo?.name || null,
     }).select().single();
-    if (!error && data) setTasks(prev => [...prev, rowToTask(data as Record<string, unknown>)]);
   };
 
   const addActivity = async (leadId: string, type: ActivityType, content: string) => {
-    const { data, error } = await supabase.from('crm_activities').insert({ lead_id: leadId, type, content }).select().single();
-    if (!error && data) setActivities(prev => [rowToActivity(data as Record<string, unknown>), ...prev]);
+    await supabase.from('crm_activities').insert({ lead_id: leadId, type, content }).select().single();
   };
 
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);

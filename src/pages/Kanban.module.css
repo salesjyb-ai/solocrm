@@ -48,7 +48,7 @@
 }
 
 .colHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.colTitle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+.colTitle { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-primary); }
 .colDot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .dot_todo        { background: var(--text-muted); }
 .dot_in_progress { background: var(--status-contact); }
@@ -91,7 +91,7 @@
 
 .cardTop { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
 .grip { color: var(--border); flex-shrink: 0; margin-top: 1px; }
-.cardTitle { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.4; word-break: break-word; }
+.cardTitle { flex: 1; font-size: 13px; font-weight: 500; line-height: 1.4; word-break: break-word; color: var(--text-primary); }
 .cardDelete {
   width: 22px; height: 22px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;

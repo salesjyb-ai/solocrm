@@ -1,6 +1,6 @@
 .page { padding: 28px 32px; max-width: 900px; }
 .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
-.title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+.title { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; color: var(--text-primary); }
 .sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 .headerRight { display: flex; align-items: center; gap: 12px; }
 
@@ -19,7 +19,7 @@
 .tab:not(.tabActive) .tabCount { background: var(--bg); color: var(--text-muted); }
 
 .section { margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
-.sectionHeader { display: flex; align-items: center; gap: 8px; padding: 14px 16px; width: 100%; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background var(--transition); }
+.sectionHeader { display: flex; align-items: center; gap: 8px; padding: 14px 16px; width: 100%; font-size: 13.5px; font-weight: 600; color: var(--text-primary); cursor: pointer; transition: background var(--transition); }
 .sectionHeader:hover { background: var(--bg); }
 .sectionDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .sectionTitle { flex: 1; text-align: left; }
@@ -37,7 +37,7 @@
 
 .itemBody { flex: 1; min-width: 0; }
 .itemTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.itemTitle { font-size: 14px; font-weight: 500; }
+.itemTitle { font-size: 14px; font-weight: 500; color: var(--text-primary); }
 .itemDone .itemTitle { text-decoration: line-through; }
 .itemContent { font-size: 12.5px; color: #d0cdc5; margin-top: 4px; line-height: 1.5; }
 

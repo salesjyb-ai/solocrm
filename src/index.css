@@ -37,34 +37,44 @@
 }
 
 [data-theme="dark"] {
-  --bg: #13120f;
-  --bg-secondary: #1a1916;
-  --surface: #201f1b;
-  --surface-hover: #272520;
-  --border: #2e2c27;
-  --border-subtle: #252320;
-  --text-primary: #f0ede6;
-  --text-secondary: #9e9b93;
-  --text-muted: #6b6860;
-  --accent: #52b788;
-  --accent-light: #1a3328;
-  --accent-muted: #2d6a4f;
-  --accent2: #f4a27a;
-  --accent2-light: #3d2118;
-  --accent3: #8b8fbb;
-  --accent3-light: #1e1f2a;
+  /* 배경: 충분히 어둡게, 단계 명확히 */
+  --bg: #111110;
+  --bg-secondary: #18171a;
+  --surface: #1e1d1b;
+  --surface-hover: #28272a;
+
+  /* 테두리: 배경 대비 확실히 */
+  --border: #3e3c38;
+  --border-subtle: #2e2c29;
+
+  /* 글자: 확실한 대비 */
+  --text-primary: #f4f2ee;
+  --text-secondary: #b8b4ac;
+  --text-muted: #7a7670;
+
+  /* 액센트 */
+  --accent: #4ecca3;
+  --accent-light: #0f2a22;
+  --accent-muted: #3ab88c;
+  --accent2: #f79a6a;
+  --accent2-light: #3a1e10;
+  --accent3: #9b9fcf;
+  --accent3-light: #1c1d2e;
+
+  /* 상태 뱃지 */
   --status-new: #f4a261;
-  --status-new-bg: #2e1e0e;
-  --status-contact: #6ab0f5;
-  --status-contact-bg: #0e1e2e;
-  --status-proposal: #c07ad4;
-  --status-proposal-bg: #1e0e22;
-  --status-won: #52b788;
-  --status-won-bg: #0e2018;
-  --status-lost: #f4a27a;
-  --status-lost-bg: #2e1410;
-  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  --status-new-bg: #321c0a;
+  --status-contact: #74bcff;
+  --status-contact-bg: #0a1e32;
+  --status-proposal: #cc80e0;
+  --status-proposal-bg: #220e2a;
+  --status-won: #4ecca3;
+  --status-won-bg: #0a2018;
+  --status-lost: #f79a6a;
+  --status-lost-bg: #321408;
+
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -106,24 +116,47 @@ input, textarea, select { font-family: 'Sora', sans-serif; font-size: 14px; }
   filter: invert(0.8);
 }
 
-/* 다크모드 탭/버튼 border 가시성 보완 */
+/* 다크모드 탭/버튼: 비활성 상태 명확하게 */
 [data-theme="dark"] button[class*="tab"]:not([class*="tabActive"]),
 [data-theme="dark"] button[class*="viewBtn"]:not([class*="viewBtnActive"]) {
-  border-color: #3d3b35 !important;
-  background: #2a2925 !important;
+  border-color: #4a4840 !important;
+  background: #272624 !important;
+  color: #c0bdb5 !important;
+}
+[data-theme="dark"] button[class*="tab"]:not([class*="tabActive"]):hover,
+[data-theme="dark"] button[class*="viewBtn"]:not([class*="viewBtnActive"]):hover {
+  border-color: #4ecca3 !important;
+  color: #4ecca3 !important;
+  background: #152820 !important;
 }
 
-/* 다크모드 카드/섹션 border 강화 */
-[data-theme="dark"] [class*="section"],
+/* 비활성 일반 버튼(CSV, 날짜이동 등) */
+[data-theme="dark"] button[class*="exportBtn"],
+[data-theme="dark"] button[class*="calBtn"] {
+  border-color: #4a4840;
+  background: #272624;
+  color: #c0bdb5;
+}
+
+/* 다크모드 카드/섹션 테두리 명확하게 */
 [data-theme="dark"] [class*="card"],
-[data-theme="dark"] [class*="dateGroup"],
-[data-theme="dark"] [class*="table"] {
-  border-color: #3d3b35;
+[data-theme="dark"] [class*="dateGroup"] {
+  border-color: #3e3c38 !important;
+}
+
+/* 다크모드 테이블 헤더/행 */
+[data-theme="dark"] [class*="tableHead"],
+[data-theme="dark"] [class*="tableHeader"] {
+  background: #18171a !important;
+  color: #b8b4ac !important;
+}
+[data-theme="dark"] [class*="tableRow"]:hover {
+  background: #28272a !important;
 }
 
 /* 다크모드 select 화살표 */
 [data-theme="dark"] select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
 }

@@ -127,3 +127,24 @@
   .board { grid-template-columns: 1fr; }
   .column { min-height: 160px; }
 }
+
+/* ── 다크모드 ── */
+:global([data-theme="dark"]) .projectSelect {
+  background: #272624;
+  border-color: #4a4840;
+  color: #f0ede6;
+}
+:global([data-theme="dark"]) .col {
+  background: #1a1916;
+  border-color: #3e3c38;
+}
+:global([data-theme="dark"]) .colHeader {
+  border-color: #3e3c38;
+}
+:global([data-theme="dark"]) .card {
+  background: #1e1d1b;
+  border-color: #3e3c38;
+}
+:global([data-theme="dark"]) .card:hover {
+  border-color: #5a5850;
+}

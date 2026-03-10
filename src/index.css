@@ -45,14 +45,23 @@
   --border-subtle: #252320;
   --text-primary: #f0ede6;
   --text-secondary: #9e9b93;
-  --text-muted: #5e5c56;
+  --text-muted: #6b6860;
+  --accent: #52b788;
   --accent-light: #1a3328;
+  --accent-muted: #2d6a4f;
+  --accent2: #f4a27a;
   --accent2-light: #3d2118;
+  --accent3: #8b8fbb;
   --accent3-light: #1e1f2a;
+  --status-new: #f4a261;
   --status-new-bg: #2e1e0e;
+  --status-contact: #6ab0f5;
   --status-contact-bg: #0e1e2e;
+  --status-proposal: #c07ad4;
   --status-proposal-bg: #1e0e22;
+  --status-won: #52b788;
   --status-won-bg: #0e2018;
+  --status-lost: #f4a27a;
   --status-lost-bg: #2e1410;
   --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
   --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
@@ -73,3 +82,26 @@ input, textarea, select { font-family: 'Sora', sans-serif; font-size: 14px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* 다크모드 input/select/textarea */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}

@@ -41,14 +41,14 @@
 .name { font-size: 13.5px; font-weight: 500; }
 .company { font-size: 11.5px; color: var(--text-muted); }
 .valueCell { font-size: 13px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
-.actionCell { font-size: 12.5px; color: #d0cdc5; max-width: 200px; }
-.dateCell { font-size: 12.5px; color: #d0cdc5; white-space: nowrap; }
+.actionCell { font-size: 12.5px; color: var(--text-primary); max-width: 200px; }
+.dateCell { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; }
 .na { color: var(--text-muted); }
 .deleteBtn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-xs); color: var(--text-muted); transition: all var(--transition); }
 .deleteBtn:hover { background: var(--status-lost-bg); color: var(--status-lost); }
 .empty { text-align: center; color: var(--text-muted); padding: 32px; font-size: 13.5px; }
 @media (max-width: 768px) { .page { padding: 16px; } .funnelRow { gap: 6px; } .funnelItem { padding: 6px 10px; } }
-.exportBtn { display: flex; align-items: center; gap: 7px; background: var(--bg-secondary); color: #d0cdc5; padding: 9px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; border: 1px solid var(--border); transition: all var(--transition); white-space: nowrap; }
+.exportBtn { display: flex; align-items: center; gap: 7px; background: var(--bg-secondary); color: var(--text-secondary); padding: 9px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; border: 1px solid var(--border); transition: all var(--transition); white-space: nowrap; }
 .exportBtn:hover { border-color: var(--accent-muted); color: var(--accent); background: var(--accent-light); }
 
 /* ── 다크모드 ── */

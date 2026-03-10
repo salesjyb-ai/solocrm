@@ -4,14 +4,14 @@
 .sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
 .headerRight { display: flex; align-items: center; gap: 12px; }
 
-.doneToggle { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #d0cdc5; cursor: pointer; }
+.doneToggle { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-secondary); cursor: pointer; }
 .doneToggle input { cursor: pointer; }
 
 .addBtn { display: flex; align-items: center; gap: 6px; padding: 9px 16px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
 .addBtn:hover { opacity: 0.85; }
 
 .tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
-.tab { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; color: #d0cdc5; border: 1px solid var(--border); background: var(--surface); transition: all var(--transition); }
+.tab { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary); border: 1px solid var(--border); background: var(--surface); transition: all var(--transition); }
 .tab:hover { border-color: var(--accent-muted); color: var(--accent); }
 .tabActive { background: var(--accent); color: #fff; border-color: var(--accent); }
 .tabCount { font-size: 11px; background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 10px; }
@@ -39,7 +39,7 @@
 .itemTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .itemTitle { font-size: 14px; font-weight: 500; color: var(--text-primary); }
 .itemDone .itemTitle { text-decoration: line-through; }
-.itemContent { font-size: 12.5px; color: #d0cdc5; margin-top: 4px; line-height: 1.5; }
+.itemContent { font-size: 12.5px; color: var(--text-secondary); margin-top: 4px; line-height: 1.5; }
 
 .itemMeta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .priority { font-size: 11.5px; font-weight: 600; }

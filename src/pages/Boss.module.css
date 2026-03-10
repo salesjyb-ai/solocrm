@@ -48,3 +48,15 @@
 
 .deleteBtn { color: var(--text-muted); padding: 4px; border-radius: var(--radius-xs); flex-shrink: 0; transition: color var(--transition), background var(--transition); }
 .deleteBtn:hover { color: var(--status-lost); background: var(--status-lost-bg); }
+
+/* 다크모드 탭 가시성 보완 */
+:global([data-theme="dark"]) .tab {
+  border-color: #3d3b35;
+  background: #2a2925;
+  color: var(--text-secondary);
+}
+:global([data-theme="dark"]) .tab:hover {
+  border-color: var(--accent-muted);
+  background: #2e3229;
+  color: var(--accent);
+}

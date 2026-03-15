@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, FolderKanban, CheckSquare, Kanban, Sun, Moon, Zap, LogOut, UserCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import Toast from './Toast';
 import styles from './Layout.module.css';
 
 const nav = [
@@ -14,7 +15,7 @@ const nav = [
 ];
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { theme, toggleTheme, signOut } = useApp();
+  const { theme, toggleTheme, signOut, toasts, removeToast } = useApp();
   
   return (
     <div className={styles.layout}>
@@ -48,6 +49,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <main className={styles.main}>
         {children}
       </main>
+      <Toast toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

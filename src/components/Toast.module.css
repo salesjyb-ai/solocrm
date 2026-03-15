@@ -1,0 +1,63 @@
+.container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 240px;
+  max-width: 360px;
+  pointer-events: all;
+  animation: slideIn 0.2s ease;
+  border: 1px solid transparent;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.success {
+  background: var(--status-won-bg);
+  color: var(--status-won);
+  border-color: var(--status-won);
+}
+
+.error {
+  background: var(--status-lost-bg);
+  color: var(--status-lost);
+  border-color: var(--status-lost);
+}
+
+.info {
+  background: var(--status-contact-bg);
+  color: var(--status-contact);
+  border-color: var(--status-contact);
+}
+
+.icon { flex-shrink: 0; }
+
+.message { flex: 1; line-height: 1.4; }
+
+.close {
+  flex-shrink: 0;
+  opacity: 0.6;
+  padding: 2px;
+  border-radius: 4px;
+  transition: opacity var(--transition);
+  color: inherit;
+}
+.close:hover { opacity: 1; }

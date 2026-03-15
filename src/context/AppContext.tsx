@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import type { ToastItem, ToastType } from '../components/Toast';
 import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember } from '../types';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
@@ -37,6 +38,8 @@ interface AppContextType {
   addTask: (task: Omit<Task, 'id'>) => Promise<void>;
   addActivity: (leadId: string, type: ActivityType, content: string) => Promise<void>;
   getLeadActivities: (leadId: string) => Activity[];
+  toasts: ToastItem[];
+  removeToast: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -121,6 +124,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, type, message }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
   const [theme, setTheme] = useState<'light' | 'dark'>(() =>
     (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
   );
@@ -133,11 +146,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
 
   const addMember = async (member: Omit<ProjectMember, 'id' | 'createdAt'>) => {
-    const { data } = await supabase.from('crm_project_members').insert({
+    const { data, error } = await supabase.from('crm_project_members').insert({
       project_id: member.projectId, name: member.name, type: member.type, role: member.role,
       company: member.company, contract_type: member.contractType, monthly_rate: member.monthlyRate,
       start_date: member.startDate, end_date: member.endDate, utilization: member.utilization, notes: member.notes,
     }).select().single();
+    if (error) { showToast('인력 추가에 실패했습니다.', 'error'); return; }
     if (data) setMembers(prev => [...prev, rowToMember(data as Record<string, unknown>)]);
   };
   const updateMember = async (id: string, fields: Partial<ProjectMember>) => {
@@ -156,12 +170,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (data) setMembers(prev => prev.map(m => m.id === id ? rowToMember(data as Record<string, unknown>) : m));
   };
   const deleteMember = async (id: string) => {
-    await supabase.from('crm_project_members').delete().eq('id', id);
+    const { error } = await supabase.from('crm_project_members').delete().eq('id', id);
+    if (error) { showToast('인력 삭제에 실패했습니다.', 'error'); return; }
     setMembers(prev => prev.filter(m => m.id !== id));
   };
 
   const addBossItem = async (item: Omit<BossItem, 'id' | 'createdAt'>) => {
-    const { data } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
+    const { data, error } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
+    if (error) { showToast('항목 추가에 실패했습니다.', 'error'); return; }
     if (data) setBossItems(prev => [rowToBoss(data as Record<string, unknown>), ...prev]);
   };
   const updateBossItem = async (id: string, fields: Partial<BossItem>) => {
@@ -176,7 +192,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (data) setBossItems(prev => prev.map(b => b.id === id ? rowToBoss(data as Record<string, unknown>) : b));
   };
   const deleteBossItem = async (id: string) => {
-    await supabase.from('crm_boss_items').delete().eq('id', id);
+    const { error } = await supabase.from('crm_boss_items').delete().eq('id', id);
+    if (error) { showToast('항목 삭제에 실패했습니다.', 'error'); return; }
     setBossItems(prev => prev.filter(b => b.id !== id));
   };
   const signOut = async () => { await supabase.auth.signOut(); setLeads([]); setProjects([]); setTasks([]); setActivities([]); setBossItems([]); setMembers([]); };
@@ -220,6 +237,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
       } catch (err) {
         console.error('fetchAll 실패:', err);
+        showToast('데이터를 불러오지 못했습니다. 새로고침해 주세요.', 'error');
       } finally {
         setLoading(false);
       }
@@ -326,7 +344,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
       } catch (err) {
         console.error('fullSync 실패:', err);
-      }
+      } // fullSync 실패는 조용히 (30초 후 재시도)
     };
     const timer = setInterval(fullSync, 30000);
     return () => clearInterval(timer);
@@ -334,11 +352,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // ──────────────────────────────────────────────────────────────
 
   const addLead = async (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const { data } = await supabase.from('crm_leads').insert({
+    const { data, error } = await supabase.from('crm_leads').insert({
       name: lead.name, company: lead.company, contact: lead.contact, phone: lead.phone,
       value: lead.value, status: lead.status, notes: lead.notes,
       next_action: lead.nextAction, next_action_date: lead.nextActionDate || null,
     }).select().single();
+    if (error) { showToast('리드 추가에 실패했습니다.', 'error'); return; }
     if (data) setLeads(prev => [rowToLead(data as Record<string, unknown>), ...prev]);
   };
 
@@ -353,7 +372,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.nextAction !== undefined) dbFields.next_action = fields.nextAction;
     if (fields.nextActionDate !== undefined) dbFields.next_action_date = fields.nextActionDate || null;
     if (fields.notes !== undefined) dbFields.notes = fields.notes;
-    const { data } = await supabase.from('crm_leads').update(dbFields).eq('id', id).select().single();
+    const { data, error } = await supabase.from('crm_leads').update(dbFields).eq('id', id).select().single();
+    if (error) { showToast('리드 수정에 실패했습니다.', 'error'); return; }
     if (data) setLeads(prev => prev.map(l => l.id === id ? rowToLead(data as Record<string, unknown>) : l));
   };
 
@@ -368,20 +388,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteLead = async (id: string) => {
-    await supabase.from('crm_leads').delete().eq('id', id);
+    const { error } = await supabase.from('crm_leads').delete().eq('id', id);
+    if (error) { showToast('리드 삭제에 실패했습니다.', 'error'); return; }
     setLeads(prev => prev.filter(l => l.id !== id));
   };
 
   const addProject = async (name: string, color: string) => {
-    const { data } = await supabase.from('crm_projects').insert({ name, color }).select().single();
+    const { data, error } = await supabase.from('crm_projects').insert({ name, color }).select().single();
+    if (error) { showToast('프로젝트 추가에 실패했습니다.', 'error'); return; }
     if (data) setProjects(prev => [rowToProject(data as Record<string, unknown>, []), ...prev]);
   };
 
   const addIssue = async (projectId: string, issue: Omit<Issue, 'id' | 'projectId' | 'createdAt'>) => {
-    const { data } = await supabase.from('crm_issues').insert({
+    const { data, error } = await supabase.from('crm_issues').insert({
       project_id: projectId, title: issue.title, status: issue.status,
       priority: issue.priority, due_date: issue.dueDate || null,
     }).select().single();
+    if (error) { showToast('이슈 추가에 실패했습니다.', 'error'); return; }
     if (data) {
       const newIssue = rowToIssue(data as Record<string, unknown>);
       setProjects(prev => prev.map(p => p.id === projectId ? { ...p, issues: [...p.issues, newIssue] } : p));
@@ -412,13 +435,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProject = async (projectId: string) => {
-    await supabase.from('crm_projects').delete().eq('id', projectId);
+    const { error } = await supabase.from('crm_projects').delete().eq('id', projectId);
+    if (error) { showToast('프로젝트 삭제에 실패했습니다.', 'error'); return; }
     setProjects(prev => prev.filter(p => p.id !== projectId));
     setMembers(prev => prev.filter(m => m.projectId !== projectId));
   };
 
   const deleteIssue = async (_projectId: string, issueId: string) => {
-    await supabase.from('crm_issues').delete().eq('id', issueId);
+    const { error } = await supabase.from('crm_issues').delete().eq('id', issueId);
+    if (error) { showToast('이슈 삭제에 실패했습니다.', 'error'); return; }
     setProjects(prev => prev.map(p => ({ ...p, issues: p.issues.filter(i => i.id !== issueId) })));
   };
 
@@ -435,15 +460,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteTask = async (id: string) => {
-    await supabase.from('crm_tasks').delete().eq('id', id);
+    const { error } = await supabase.from('crm_tasks').delete().eq('id', id);
+    if (error) { showToast('할 일 삭제에 실패했습니다.', 'error'); return; }
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
   const addTask = async (task: Omit<Task, 'id'>) => {
-    const { data } = await supabase.from('crm_tasks').insert({
+    const { data, error } = await supabase.from('crm_tasks').insert({
       title: task.title, done: task.done, due_date: task.dueDate,
       linked_type: task.linkedTo?.type || null, linked_id: task.linkedTo?.id || null, linked_name: task.linkedTo?.name || null,
     }).select().single();
+    if (error) { showToast('할 일 추가에 실패했습니다.', 'error'); return; }
     if (data) setTasks(prev => [...prev, rowToTask(data as Record<string, unknown>)]);
   };
 
@@ -455,7 +482,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast }}>
       {children}
     </AppContext.Provider>
   );

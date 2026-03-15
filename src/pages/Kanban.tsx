@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
@@ -20,6 +20,13 @@ const PRIORITY_LABEL: Record<Priority, string> = { low: '낮음', medium: '보�
 export default function Kanban() {
   const { projects, addIssue, updateIssue, updateIssueStatus, deleteIssue } = useApp();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || '');
+
+  // projects가 나중에 로드될 때 selectedProjectId 자동 설정
+  useEffect(() => {
+    if (!selectedProjectId && projects.length > 0) {
+      setSelectedProjectId(projects.filter(p => p.status === 'active')[0]?.id || projects[0].id);
+    }
+  }, [projects, selectedProjectId]);
   const [addModal, setAddModal] = useState<IssueStatus | null>(null);
   const [issueForm, setIssueForm] = useState({ title: '', priority: 'medium' as Priority, dueDate: '' });
 

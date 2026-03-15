@@ -112,10 +112,10 @@ export default function Tasks() {
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (selectedDate) return t.dueDate === selectedDate;
+      if (selectedDate) return t.dueDate === selectedDate && (!t.done || showDone);
       if (!showDone && t.done) return false;
       if (tabFilter === 'today') return t.dueDate === today;
-      if (tabFilter === 'upcoming') return !t.done || t.dueDate <= weekLater;
+      if (tabFilter === 'upcoming') return t.dueDate <= weekLater;
       return true;
     });
   }, [tasks, showDone, tabFilter, today, weekLater, selectedDate]);

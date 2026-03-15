@@ -225,7 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
     fetchAll();
-  }, [session]);
+  }, [session?.user?.id]);
 
   // ── Realtime 구독 ──────────────────────────────────────────
   useEffect(() => {
@@ -293,7 +293,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [session]);
+  }, [session?.user?.id]);
   // ──────────────────────────────────────────────────────────
 
   // ── 30초 주기 전체 동기화 (추가/수정/삭제 모두 반영) ─────────────
@@ -330,7 +330,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
     const timer = setInterval(fullSync, 30000);
     return () => clearInterval(timer);
-  }, [session]);
+  }, [session?.user?.id]);
   // ──────────────────────────────────────────────────────────────
 
   const addLead = async (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => {

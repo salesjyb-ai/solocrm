@@ -78,7 +78,9 @@ export default function ProjectDetail() {
     const payload = {
       projectId: id!, name: mForm.name, type: mForm.type, role: mForm.role || undefined,
       company: mForm.company || undefined, contractType: mForm.contractType || undefined,
-      monthlyRate: mForm.monthlyRate ? Number(mForm.monthlyRate.replace(/,/g, '')) : undefined,
+      monthlyRate: mForm.monthlyRate && Number(mForm.monthlyRate.replace(/,/g, '')) > 0
+        ? Number(mForm.monthlyRate.replace(/,/g, ''))
+        : undefined,
       startDate: mForm.startDate || undefined, endDate: mForm.endDate || undefined,
       utilization: mForm.utilization, notes: mForm.notes || undefined,
     };
@@ -88,6 +90,8 @@ export default function ProjectDetail() {
       await addMember(payload);
     }
     setMemberModal(false);
+    setEditingMember(null);
+    setMForm({ name: '', type: 'internal', role: '', company: '', contractType: '월정액', monthlyRate: '', startDate: '', endDate: '', utilization: 100, notes: '' });
   };
 
   const handleIssueAdd = async () => {

@@ -194,30 +194,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!session) { setLoading(false); return; }
     async function fetchAll() {
       setLoading(true);
-      const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes] = await Promise.all([
-        supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
-        supabase.from('crm_tasks').select('*').order('due_date', { ascending: true }),
-        supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_project_members').select('*').order('created_at', { ascending: true }),
-      ]);
-      const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
-      setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
-      setProjects((projectsRes.data || []).map(r => rowToProject(r as Record<string, unknown>, issues)));
-      setTasks((tasksRes.data || []).map(r => rowToTask(r as Record<string, unknown>)));
-      setActivities((activitiesRes.data || []).map(r => rowToActivity(r as Record<string, unknown>)));
-      setMembers((membersRes.data || []).map(r => ({
-        id: r.id as string, projectId: r.project_id as string, name: r.name as string,
-        type: r.type as ProjectMember['type'], role: r.role as string | undefined,
-        company: r.company as string | undefined, contractType: r.contract_type as string | undefined,
-        monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined,
-        endDate: r.end_date as string | undefined, utilization: r.utilization as number,
-        notes: r.notes as string | undefined, createdAt: r.created_at as string,
-      })));
-      setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
-      setLoading(false);
+      try {
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes] = await Promise.all([
+          supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_tasks').select('*').order('due_date', { ascending: true }),
+          supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_project_members').select('*').order('created_at', { ascending: true }),
+        ]);
+        const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
+        setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
+        setProjects((projectsRes.data || []).map(r => rowToProject(r as Record<string, unknown>, issues)));
+        setTasks((tasksRes.data || []).map(r => rowToTask(r as Record<string, unknown>)));
+        setActivities((activitiesRes.data || []).map(r => rowToActivity(r as Record<string, unknown>)));
+        setMembers((membersRes.data || []).map(r => ({
+          id: r.id as string, projectId: r.project_id as string, name: r.name as string,
+          type: r.type as ProjectMember['type'], role: r.role as string | undefined,
+          company: r.company as string | undefined, contractType: r.contract_type as string | undefined,
+          monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined,
+          endDate: r.end_date as string | undefined, utilization: r.utilization as number,
+          notes: r.notes as string | undefined, createdAt: r.created_at as string,
+        })));
+        setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+      } catch (err) {
+        console.error('fetchAll 실패:', err);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchAll();
   }, [session]);
@@ -295,29 +300,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session) return;
     const fullSync = async () => {
-      const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes] = await Promise.all([
-        supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
-        supabase.from('crm_tasks').select('*').order('due_date', { ascending: true }),
-        supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
-        supabase.from('crm_project_members').select('*').order('created_at', { ascending: true }),
-      ]);
-      const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
-      setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
-      setProjects((projectsRes.data || []).map(r => rowToProject(r as Record<string, unknown>, issues)));
-      setTasks((tasksRes.data || []).map(r => rowToTask(r as Record<string, unknown>)));
-      setActivities((activitiesRes.data || []).map(r => rowToActivity(r as Record<string, unknown>)));
-      setMembers((membersRes.data || []).map(r => ({
-        id: r.id as string, projectId: r.project_id as string, name: r.name as string,
-        type: r.type as ProjectMember['type'], role: r.role as string | undefined,
-        company: r.company as string | undefined, contractType: r.contract_type as string | undefined,
-        monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined,
-        endDate: r.end_date as string | undefined, utilization: r.utilization as number,
-        notes: r.notes as string | undefined, createdAt: r.created_at as string,
-      })));
-      setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+      try {
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes] = await Promise.all([
+          supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_tasks').select('*').order('due_date', { ascending: true }),
+          supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_project_members').select('*').order('created_at', { ascending: true }),
+        ]);
+        const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
+        setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
+        setProjects((projectsRes.data || []).map(r => rowToProject(r as Record<string, unknown>, issues)));
+        setTasks((tasksRes.data || []).map(r => rowToTask(r as Record<string, unknown>)));
+        setActivities((activitiesRes.data || []).map(r => rowToActivity(r as Record<string, unknown>)));
+        setMembers((membersRes.data || []).map(r => ({
+          id: r.id as string, projectId: r.project_id as string, name: r.name as string,
+          type: r.type as ProjectMember['type'], role: r.role as string | undefined,
+          company: r.company as string | undefined, contractType: r.contract_type as string | undefined,
+          monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined,
+          endDate: r.end_date as string | undefined, utilization: r.utilization as number,
+          notes: r.notes as string | undefined, createdAt: r.created_at as string,
+        })));
+        setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+      } catch (err) {
+        console.error('fullSync 실패:', err);
+      }
     };
     const timer = setInterval(fullSync, 30000);
     return () => clearInterval(timer);

@@ -24,16 +24,16 @@ export default function Projects() {
 
   const toggle = (id: string) => setExpanded(p => ({...p, [id]: !p[id]}));
 
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (!projectForm.name) return;
-    addProject(projectForm.name, projectForm.color);
+    await addProject(projectForm.name, projectForm.color);
     setAddProjectModal(false);
     setProjectForm({ name: '', color: projectColors[0] });
   };
 
-  const handleAddIssue = () => {
+  const handleAddIssue = async () => {
     if (!issueForm.title || !addIssueModal) return;
-    addIssue(addIssueModal, { title: issueForm.title, status: 'todo', priority: issueForm.priority, dueDate: issueForm.dueDate });
+    await addIssue(addIssueModal, { title: issueForm.title, status: 'todo', priority: issueForm.priority, dueDate: issueForm.dueDate });
     setAddIssueModal(null);
     setIssueForm({ title: '', priority: 'medium', dueDate: '' });
   };

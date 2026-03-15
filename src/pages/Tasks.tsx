@@ -139,21 +139,21 @@ export default function Tasks() {
     setModalOpen(true);
   };
 
-  const handleModalAdd = () => {
+  const handleModalAdd = async () => {
     if (!form.title.trim()) return;
     const linkedTo = form.linkedType && form.linkedId ? (() => {
       if (form.linkedType === 'lead') { const l = leads.find(l => l.id === form.linkedId); return l ? { type: 'lead' as const, id: l.id, name: l.company } : undefined; }
       const p = projects.find(p => p.id === form.linkedId); return p ? { type: 'project' as const, id: p.id, name: p.name } : undefined;
     })() : undefined;
-    addTask({ title: form.title, done: false, dueDate: form.dueDate || today, linkedTo, subtasks: [] });
+    await addTask({ title: form.title, done: false, dueDate: form.dueDate || today, linkedTo, subtasks: [] });
     setModalOpen(false);
     setForm({ title: '', dueDate: '', linkedType: '', linkedId: '' });
   };
 
-  const handleInlineAdd = (date: string) => {
+  const handleInlineAdd = async (date: string) => {
     const title = (inlineInputs[date] || '').trim();
     if (!title) return;
-    addTask({ title, done: false, dueDate: date, linkedTo: undefined, subtasks: [] });
+    await addTask({ title, done: false, dueDate: date, linkedTo: undefined, subtasks: [] });
     setInlineInputs(p => ({ ...p, [date]: '' }));
   };
 

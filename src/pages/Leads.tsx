@@ -21,14 +21,14 @@ export default function Leads() {
   const [form, setForm] = useState({ name: '', company: '', contact: '', phone: '', value: '', status: 'new' as LeadStatus, nextAction: '', nextActionDate: '' });
 
   const filtered = leads.filter(l => {
-    const matchSearch = l.name.includes(search) || l.company.includes(search);
+    const matchSearch = l.name.includes(search.trim()) || l.company.includes(search.trim());
     const matchStatus = filterStatus === 'all' || l.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.name || !form.company) return;
-    addLead({ name: form.name, company: form.company, contact: form.contact, phone: form.phone, value: Number(form.value) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate });
+    await addLead({ name: form.name, company: form.company, contact: form.contact, phone: form.phone, value: Number(form.value) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate });
     setModalOpen(false);
     setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' });
   };

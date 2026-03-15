@@ -76,7 +76,7 @@ function rowToProject(r: Record<string, unknown>, issues: Issue[]): Project {
 function rowToTask(r: Record<string, unknown>): Task {
   return {
     id: r.id as string, title: r.title as string, done: r.done as boolean,
-    dueDate: r.due_date as string,
+    dueDate: (r.due_date as string) ?? '',
     linkedTo: r.linked_type ? { type: r.linked_type as 'lead' | 'project', id: r.linked_id as string, name: r.linked_name as string } : undefined,
     subtasks: (r.subtasks as Subtask[]) || [],
   };

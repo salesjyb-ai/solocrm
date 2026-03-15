@@ -120,7 +120,7 @@ export default function ProjectDetail() {
           </div>
           <div className={styles.summaryItem}>
             <span className={styles.summaryLabel}>투입 인력</span>
-            <span className={styles.summaryVal}>{projectMembers.filter(m => !m.endDate || m.endDate >= new Date().toISOString().split('T')[0]).length}명</span>
+            <span className={styles.summaryVal}>{projectMembers.filter(m => !m.endDate || m.endDate >= new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0]).length}명</span>
           </div>
           {totalMM > 0 && (
             <div className={styles.summaryItem}>
@@ -386,7 +386,7 @@ function calcMM(startDate?: string, endDate?: string, utilization = 100): number
 }
 
 function MemberCard({ member, onEdit, onDelete }: { member: ProjectMember; onEdit: () => void; onDelete: () => void }) {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
   const isActive = !member.endDate || member.endDate >= today;
 
   return (

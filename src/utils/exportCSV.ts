@@ -28,7 +28,7 @@ const LABEL: Record<string, string> = {
   active: '진행중', paused: '일시정지',
 };
 const l = (v: string) => LABEL[v] || v;
-const today = () => new Date().toISOString().split('T')[0];
+const today = () => new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
 
 export function exportLeads(leads: Lead[]) {
   downloadCSV(`리드_${today()}.csv`,

@@ -114,7 +114,7 @@ export default function Leads() {
         </table>
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="새 리드 추가">
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' }); }} title="새 리드 추가">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.row}>
             <div className={f.field}>
@@ -169,7 +169,7 @@ export default function Leads() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.btnSecondary} onClick={() => setModalOpen(false)}>취소</button>
+            <button className={f.btnSecondary} onClick={() => { setModalOpen(false); setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' }); }}>취소</button>
             <button className={f.btnPrimary} onClick={handleSubmit}>추가</button>
           </div>
         </div>

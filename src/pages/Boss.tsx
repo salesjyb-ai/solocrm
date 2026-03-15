@@ -109,7 +109,7 @@ export default function Boss() {
         );
       })}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="항목 추가">
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setForm({ type: 'question', title: '', content: '', priority: 'medium', dueDate: '', projectId: '' }); }} title="항목 추가">
         <div className={f.form}>
           <div className={f.row}>
             <div className={f.field}>
@@ -151,7 +151,7 @@ export default function Boss() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.cancel} onClick={() => setModalOpen(false)}>취소</button>
+            <button className={f.cancel} onClick={() => { setModalOpen(false); setForm({ type: 'question', title: '', content: '', priority: 'medium', dueDate: '', projectId: '' }); }}>취소</button>
             <button className={f.submit} onClick={handleAdd}>추가</button>
           </div>
         </div>

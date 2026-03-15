@@ -405,6 +405,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deleteProject = async (projectId: string) => {
     await supabase.from('crm_projects').delete().eq('id', projectId);
     setProjects(prev => prev.filter(p => p.id !== projectId));
+    setMembers(prev => prev.filter(m => m.projectId !== projectId));
   };
 
   const deleteIssue = async (_projectId: string, issueId: string) => {

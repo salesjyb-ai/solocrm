@@ -133,7 +133,7 @@ export default function Projects() {
       </div>
 
       {/* Add Project Modal */}
-      <Modal open={addProjectModal} onClose={() => setAddProjectModal(false)} title="새 프로젝트">
+      <Modal open={addProjectModal} onClose={() => { setAddProjectModal(false); setProjectForm({ name: '', color: projectColors[0] }); }} title="새 프로젝트">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.field}>
             <label className={f.label}>프로젝트 이름 *</label>
@@ -148,14 +148,14 @@ export default function Projects() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.btnSecondary} onClick={() => setAddProjectModal(false)}>취소</button>
+            <button className={f.btnSecondary} onClick={() => { setAddProjectModal(false); setProjectForm({ name: '', color: projectColors[0] }); }}>취소</button>
             <button className={f.btnPrimary} onClick={handleAddProject}>생성</button>
           </div>
         </div>
       </Modal>
 
       {/* Add Issue Modal */}
-      <Modal open={!!addIssueModal} onClose={() => setAddIssueModal(null)} title="이슈 추가">
+      <Modal open={!!addIssueModal} onClose={() => { setAddIssueModal(null); setIssueForm({ title: '', priority: 'medium', dueDate: '' }); }} title="이슈 추가">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.field}>
             <label className={f.label}>이슈 제목 *</label>

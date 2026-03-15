@@ -90,6 +90,26 @@ function rowToActivity(r: Record<string, unknown>): Activity {
   };
 }
 
+function rowToMember(r: Record<string, unknown>): ProjectMember {
+  return {
+    id: r.id as string, projectId: r.project_id as string, name: r.name as string,
+    type: r.type as ProjectMember['type'], role: r.role as string | undefined,
+    company: r.company as string | undefined, contractType: r.contract_type as string | undefined,
+    monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined,
+    endDate: r.end_date as string | undefined, utilization: r.utilization as number,
+    notes: r.notes as string | undefined, createdAt: r.created_at as string,
+  };
+}
+
+function rowToBoss(r: Record<string, unknown>): BossItem {
+  return {
+    id: r.id as string, type: r.type as BossItem['type'], title: r.title as string,
+    content: r.content as string | undefined, priority: r.priority as BossItem['priority'],
+    dueDate: r.due_date as string | undefined, done: r.done as boolean,
+    projectId: r.project_id as string | undefined, createdAt: r.created_at as string,
+  };
+}
+
 const statusLabel: Record<LeadStatus, string> = { new: '신규', contacted: '연락완료', proposal: '제안중', won: '수주', lost: '실패' };
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -111,20 +131,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
-  const toMemberObj = (r: Record<string, unknown>): ProjectMember => ({
-    id: r.id as string, projectId: r.project_id as string, name: r.name as string,
-    type: r.type as ProjectMember['type'], role: r.role as string | undefined,
-    company: r.company as string | undefined, contractType: r.contract_type as string | undefined,
-    monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined,
-    endDate: r.end_date as string | undefined, utilization: r.utilization as number,
-    notes: r.notes as string | undefined, createdAt: r.created_at as string,
-  });
-  const toBossObj = (r: Record<string, unknown>): BossItem => ({
-    id: r.id as string, type: r.type as BossItem['type'], title: r.title as string,
-    content: r.content as string | undefined, priority: r.priority as BossItem['priority'],
-    dueDate: r.due_date as string | undefined, done: r.done as boolean,
-    projectId: r.project_id as string | undefined, createdAt: r.created_at as string,
-  });
 
   const addMember = async (member: Omit<ProjectMember, 'id' | 'createdAt'>) => {
     const { data } = await supabase.from('crm_project_members').insert({
@@ -132,7 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       company: member.company, contract_type: member.contractType, monthly_rate: member.monthlyRate,
       start_date: member.startDate, end_date: member.endDate, utilization: member.utilization, notes: member.notes,
     }).select().single();
-    if (data) setMembers(prev => [...prev, toMemberObj(data as Record<string, unknown>)]);
+    if (data) setMembers(prev => [...prev, rowToMember(data as Record<string, unknown>)]);
   };
   const updateMember = async (id: string, fields: Partial<ProjectMember>) => {
     const db: Record<string, unknown> = {};
@@ -147,7 +153,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.utilization !== undefined) db.utilization = fields.utilization;
     if (fields.notes !== undefined) db.notes = fields.notes;
     const { data } = await supabase.from('crm_project_members').update(db).eq('id', id).select().single();
-    if (data) setMembers(prev => prev.map(m => m.id === id ? toMemberObj(data as Record<string, unknown>) : m));
+    if (data) setMembers(prev => prev.map(m => m.id === id ? rowToMember(data as Record<string, unknown>) : m));
   };
   const deleteMember = async (id: string) => {
     await supabase.from('crm_project_members').delete().eq('id', id);
@@ -156,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addBossItem = async (item: Omit<BossItem, 'id' | 'createdAt'>) => {
     const { data } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
-    if (data) setBossItems(prev => [toBossObj(data as Record<string, unknown>), ...prev]);
+    if (data) setBossItems(prev => [rowToBoss(data as Record<string, unknown>), ...prev]);
   };
   const updateBossItem = async (id: string, fields: Partial<BossItem>) => {
     const dbFields: Record<string, unknown> = {};
@@ -167,7 +173,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.done !== undefined) dbFields.done = fields.done;
     if (fields.projectId !== undefined) dbFields.project_id = fields.projectId;
     const { data } = await supabase.from('crm_boss_items').update(dbFields).eq('id', id).select().single();
-    if (data) setBossItems(prev => prev.map(b => b.id === id ? toBossObj(data as Record<string, unknown>) : b));
+    if (data) setBossItems(prev => prev.map(b => b.id === id ? rowToBoss(data as Record<string, unknown>) : b));
   };
   const deleteBossItem = async (id: string) => {
     await supabase.from('crm_boss_items').delete().eq('id', id);
@@ -225,14 +231,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // leads
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_leads' }, payload => {
-        if (payload.eventType === 'INSERT') setLeads(prev => [rowToLead(payload.new as Record<string, unknown>), ...prev]);
+        if (payload.eventType === 'INSERT') setLeads(prev => prev.some(l => l.id === payload.new.id) ? prev : [rowToLead(payload.new as Record<string, unknown>), ...prev]);
         if (payload.eventType === 'UPDATE') setLeads(prev => prev.map(l => l.id === payload.new.id ? rowToLead(payload.new as Record<string, unknown>) : l));
         if (payload.eventType === 'DELETE') setLeads(prev => prev.filter(l => l.id !== payload.old.id));
       })
 
       // projects
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_projects' }, payload => {
-        if (payload.eventType === 'INSERT') setProjects(prev => [rowToProject(payload.new as Record<string, unknown>, []), ...prev]);
+        if (payload.eventType === 'INSERT') setProjects(prev => prev.some(p => p.id === payload.new.id) ? prev : [rowToProject(payload.new as Record<string, unknown>, []), ...prev]);
         if (payload.eventType === 'UPDATE') setProjects(prev => prev.map(p => p.id === payload.new.id ? { ...p, name: payload.new.name as string, color: payload.new.color as string, status: payload.new.status as Project['status'] } : p));
         if (payload.eventType === 'DELETE') setProjects(prev => prev.filter(p => p.id !== payload.old.id));
       })
@@ -241,7 +247,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_issues' }, payload => {
         if (payload.eventType === 'INSERT') {
           const issue = rowToIssue(payload.new as Record<string, unknown>);
-          setProjects(prev => prev.map(p => p.id === issue.projectId ? { ...p, issues: [...p.issues, issue] } : p));
+          setProjects(prev => prev.map(p => p.id === issue.projectId ? { ...p, issues: p.issues.some(i => i.id === issue.id) ? p.issues : [...p.issues, issue] } : p));
         }
         if (payload.eventType === 'UPDATE') {
           const issue = rowToIssue(payload.new as Record<string, unknown>);
@@ -254,30 +260,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       // tasks
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_tasks' }, payload => {
-        if (payload.eventType === 'INSERT') setTasks(prev => [...prev, rowToTask(payload.new as Record<string, unknown>)]);
+        if (payload.eventType === 'INSERT') setTasks(prev => prev.some(t => t.id === payload.new.id) ? prev : [...prev, rowToTask(payload.new as Record<string, unknown>)]);
         if (payload.eventType === 'UPDATE') setTasks(prev => prev.map(t => t.id === payload.new.id ? rowToTask(payload.new as Record<string, unknown>) : t));
         if (payload.eventType === 'DELETE') setTasks(prev => prev.filter(t => t.id !== payload.old.id));
       })
 
       // activities
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_activities' }, payload => {
-        if (payload.eventType === 'INSERT') setActivities(prev => [rowToActivity(payload.new as Record<string, unknown>), ...prev]);
+        if (payload.eventType === 'INSERT') setActivities(prev => prev.some(a => a.id === payload.new.id) ? prev : [rowToActivity(payload.new as Record<string, unknown>), ...prev]);
         if (payload.eventType === 'DELETE') setActivities(prev => prev.filter(a => a.id !== payload.old.id));
       })
 
       // boss items
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_boss_items' }, payload => {
-        const toBoss = (r: Record<string, unknown>) => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string });
-        if (payload.eventType === 'INSERT') setBossItems(prev => [toBoss(payload.new as Record<string, unknown>), ...prev]);
-        if (payload.eventType === 'UPDATE') setBossItems(prev => prev.map(b => b.id === payload.new.id ? toBoss(payload.new as Record<string, unknown>) : b));
+        if (payload.eventType === 'INSERT') setBossItems(prev => prev.some(b => b.id === payload.new.id) ? prev : [rowToBoss(payload.new as Record<string, unknown>), ...prev]);
+        if (payload.eventType === 'UPDATE') setBossItems(prev => prev.map(b => b.id === payload.new.id ? rowToBoss(payload.new as Record<string, unknown>) : b));
         if (payload.eventType === 'DELETE') setBossItems(prev => prev.filter(b => b.id !== payload.old.id));
       })
 
       // project members
       .on('postgres_changes', { event: '*', schema: 'public', table: 'crm_project_members' }, payload => {
-        const toMember = (r: Record<string, unknown>): ProjectMember => ({ id: r.id as string, projectId: r.project_id as string, name: r.name as string, type: r.type as ProjectMember['type'], role: r.role as string | undefined, company: r.company as string | undefined, contractType: r.contract_type as string | undefined, monthlyRate: r.monthly_rate as number | undefined, startDate: r.start_date as string | undefined, endDate: r.end_date as string | undefined, utilization: r.utilization as number, notes: r.notes as string | undefined, createdAt: r.created_at as string });
-        if (payload.eventType === 'INSERT') setMembers(prev => [...prev, toMember(payload.new as Record<string, unknown>)]);
-        if (payload.eventType === 'UPDATE') setMembers(prev => prev.map(m => m.id === payload.new.id ? toMember(payload.new as Record<string, unknown>) : m));
+        if (payload.eventType === 'INSERT') setMembers(prev => prev.some(m => m.id === payload.new.id) ? prev : [...prev, rowToMember(payload.new as Record<string, unknown>)]);
+        if (payload.eventType === 'UPDATE') setMembers(prev => prev.map(m => m.id === payload.new.id ? rowToMember(payload.new as Record<string, unknown>) : m));
         if (payload.eventType === 'DELETE') setMembers(prev => prev.filter(m => m.id !== payload.old.id));
       })
 

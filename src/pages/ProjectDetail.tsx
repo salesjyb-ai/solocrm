@@ -220,7 +220,7 @@ export default function ProjectDetail() {
       )}
 
       {/* 인력 추가/수정 모달 */}
-      <Modal open={memberModal} onClose={() => setMemberModal(false)} title={editingMember ? '인력 수정' : '인력 추가'}>
+      <Modal open={memberModal} onClose={() => { setMemberModal(false); setEditingMember(null); setMForm({ name: '', type: 'internal', role: '', company: '', contractType: '월정액', monthlyRate: '', startDate: '', endDate: '', utilization: 100, notes: '' }); }} title={editingMember ? '인력 수정' : '인력 추가'}>
         <div className={f.form}>
           <div className={f.row}>
             <div className={f.field}>
@@ -286,7 +286,7 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.btnSecondary} onClick={() => setMemberModal(false)}>취소</button>
+            <button className={f.btnSecondary} onClick={() => { setMemberModal(false); setEditingMember(null); setMForm({ name: '', type: 'internal', role: '', company: '', contractType: '월정액', monthlyRate: '', startDate: '', endDate: '', utilization: 100, notes: '' }); }}>취소</button>
             <button className={f.btnPrimary} onClick={handleMemberSave}>{editingMember ? '저장' : '추가'}</button>
           </div>
         </div>
@@ -343,7 +343,7 @@ export default function ProjectDetail() {
         </div>
       </Modal>
       {/* 이슈 추가 모달 */}
-      <Modal open={issueModal} onClose={() => setIssueModal(false)} title="이슈 추가">
+      <Modal open={issueModal} onClose={() => { setIssueModal(false); setIForm({ title: '', priority: 'medium', dueDate: '' }); }} title="이슈 추가">
         <div className={f.form}>
           <div className={f.field}>
             <label className={f.label}>이슈 제목 *</label>
@@ -366,7 +366,7 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.btnSecondary} onClick={() => setIssueModal(false)}>취소</button>
+            <button className={f.btnSecondary} onClick={() => { setIssueModal(false); setIForm({ title: '', priority: 'medium', dueDate: '' }); }}>취소</button>
             <button className={f.btnPrimary} onClick={handleIssueAdd}>추가</button>
           </div>
         </div>

@@ -206,7 +206,7 @@ export default function Kanban() {
         </>
       )}
 
-      <Modal open={!!addModal} onClose={() => setAddModal(null)} title={`이슈 추가 — ${COLUMNS.find(c => c.id === addModal)?.label}`}>
+      <Modal open={!!addModal} onClose={() => { setAddModal(null); setIssueForm({ title: '', priority: 'medium', dueDate: '' }); }} title={`이슈 추가 — ${COLUMNS.find(c => c.id === addModal)?.label}`}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.field}>
             <label className={f.label}>이슈 제목 *</label>
@@ -234,7 +234,7 @@ export default function Kanban() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.btnSecondary} onClick={() => setAddModal(null)}>취소</button>
+            <button className={f.btnSecondary} onClick={() => { setAddModal(null); setIssueForm({ title: '', priority: 'medium', dueDate: '' }); }}>취소</button>
             <button className={f.btnPrimary} onClick={handleAddIssue}>추가</button>
           </div>
         </div>

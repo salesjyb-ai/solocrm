@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, Mail, Edit2, Check, X, Plus, FileText, PhoneCall, AtSign, Users, TrendingUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -26,6 +26,10 @@ export default function LeadDetail() {
   const [actType, setActType] = useState<ActivityType>('note');
   const [actContent, setActContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [notesVal, setNotesVal] = useState(lead?.notes || '');
+
+  // lead.notes가 외부(Realtime/fullSync)로 바뀌면 textarea에 반영
+  useEffect(() => { setNotesVal(lead?.notes || ''); }, [lead?.notes]);
 
   if (!lead) return (
     <div className={styles.notFound}>
@@ -152,8 +156,9 @@ export default function LeadDetail() {
             <textarea
               className={styles.notesArea}
               placeholder="리드에 대한 메모를 자유롭게 작성하세요..."
-              defaultValue={lead.notes || ''}
-              onBlur={e => saveNotes(e.target.value)}
+              value={notesVal}
+              onChange={e => setNotesVal(e.target.value)}
+              onBlur={() => saveNotes(notesVal)}
             />
             <p className={styles.notesHint}>포커스 해제 시 자동 저장</p>
           </div>

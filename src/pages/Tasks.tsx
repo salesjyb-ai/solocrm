@@ -382,7 +382,7 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
           <Plus size={13} />
           {subtasks.length > 0 && (expanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />)}
         </button>
-        <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(); }} title="삭제">
+        <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); if (confirm(`"${task.title}" 할 일을 삭제할까요?`)) onDelete(); }} title="삭제">
           <Trash2 size={13} />
         </button>
       </div>

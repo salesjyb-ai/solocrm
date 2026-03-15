@@ -100,7 +100,7 @@ export default function Boss() {
                       </div>
                       {item.content && <p className={styles.itemContent}>{item.content}</p>}
                     </div>
-                    <button className={styles.deleteBtn} onClick={() => deleteBossItem(item.id)}><Trash2 size={13} /></button>
+                    <button className={styles.deleteBtn} onClick={() => { if (confirm(`"${item.title}" 항목을 삭제할까요?`)) deleteBossItem(item.id); }}><Trash2 size={13} /></button>
                   </div>
                 ))}
               </div>

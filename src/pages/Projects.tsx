@@ -111,7 +111,7 @@ export default function Projects() {
                           </td>
                           <td className={styles.dateCell}>{issue.dueDate || <span className={styles.na}>-</span>}</td>
                           <td>
-                            <button className={styles.deleteBtn} onClick={() => deleteIssue(project.id, issue.id)}>
+                            <button className={styles.deleteBtn} onClick={() => { if (confirm(`"${issue.title}" 이슈를 삭제할까요?`)) deleteIssue(project.id, issue.id); }}>
                               <Trash2 size={12} />
                             </button>
                           </td>

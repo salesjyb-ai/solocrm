@@ -104,7 +104,7 @@ export default function Leads() {
                 <td className={styles.actionCell}>{lead.nextAction || <span className={styles.na}>-</span>}</td>
                 <td className={styles.dateCell}>{lead.nextActionDate || <span className={styles.na}>-</span>}</td>
                 <td>
-                  <button className={styles.deleteBtn} onClick={() => deleteLead(lead.id)} title="삭제">
+                  <button className={styles.deleteBtn} onClick={() => { if (confirm(`"${lead.name}" 리드를 삭제할까요? 되돌릴 수 없습니다.`)) deleteLead(lead.id); }} title="삭제">
                     <Trash2 size={13} />
                   </button>
                 </td>

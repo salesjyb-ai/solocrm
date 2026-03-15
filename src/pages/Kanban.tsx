@@ -166,7 +166,7 @@ export default function Kanban() {
                             <span className={styles.cardTitle} onClick={e => { e.stopPropagation(); setEForm({ title: issue.title, status: issue.status, priority: issue.priority, dueDate: issue.dueDate || '', assignee: issue.assignee || '', memo: issue.memo || '' }); setEditIssue(issue); }} style={{cursor:'pointer', flex:1}}>{issue.title}</span>
                             <button
                               className={styles.cardDelete}
-                              onClick={() => deleteIssue(project.id, issue.id)}
+                              onClick={() => { if (confirm(`"${issue.title}" 이슈를 삭제할까요?`)) deleteIssue(project.id, issue.id); }}
                               title="삭제"
                             >
                               <Trash2 size={11} />

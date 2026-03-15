@@ -184,7 +184,7 @@ export default function ProjectDetail() {
                 </span>
                 <span className={`${styles.priority} ${styles[`p_${issue.priority}`]}`}>● {issue.priority === 'high' ? '높음' : issue.priority === 'medium' ? '중간' : '낮음'}</span>
                 <span className={styles.dueDate}>{issue.dueDate || '-'}</span>
-                <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); deleteIssue(project.id, issue.id); }}><Trash2 size={12} /></button>
+                <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); if (confirm(`"${issue.title}" 이슈를 삭제할까요?`)) deleteIssue(project.id, issue.id); }}><Trash2 size={12} /></button>
               </div>
             ))}
           </div>
@@ -424,7 +424,7 @@ function MemberCard({ member, onEdit, onDelete }: { member: ProjectMember; onEdi
         </div>
         <div className={styles.memberActions}>
           <button className={styles.editBtn} onClick={onEdit}><Edit2 size={12} /></button>
-          <button className={styles.deleteBtn} onClick={onDelete}><Trash2 size={12} /></button>
+          <button className={styles.deleteBtn} onClick={() => { if (confirm(`"${member.name}" 인력을 삭제할까요?`)) onDelete(); }}><Trash2 size={12} /></button>
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ export default function Kanban() {
   const project = projects.find(p => p.id === selectedProjectId);
 
   const handleAddIssue = async () => {
-    if (!issueForm.title || !selectedProjectId || !addModal) return;
+    if (!issueForm.title.trim() || !selectedProjectId || !addModal) return;
     await addIssue(selectedProjectId, { title: issueForm.title, status: addModal, priority: issueForm.priority, dueDate: issueForm.dueDate });
     setAddModal(null);
     setIssueForm({ title: '', priority: 'medium', dueDate: '' });

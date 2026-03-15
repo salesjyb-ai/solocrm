@@ -27,7 +27,7 @@ export default function Leads() {
   });
 
   const handleSubmit = async () => {
-    if (!form.name || !form.company) return;
+    if (!form.name.trim() || !form.company.trim()) return;
     await addLead({ name: form.name, company: form.company, contact: form.contact, phone: form.phone, value: Number(form.value) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate });
     setModalOpen(false);
     setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' });

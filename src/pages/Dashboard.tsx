@@ -20,7 +20,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
 
-  const todayTasks = tasks.filter(t => t.dueDate <= today).sort((a, b) => Number(a.done) - Number(b.done));
+  const todayTasks = tasks.filter(t => t.dueDate && t.dueDate <= today).sort((a, b) => Number(a.done) - Number(b.done));
   const activeLeads = leads.filter(l => l.status !== 'won' && l.status !== 'lost');
   const activeProjects = projects.filter(p => p.status === 'active');
   const totalPipelineValue = activeLeads.reduce((sum, l) => sum + l.value, 0);
@@ -189,7 +189,7 @@ export default function Dashboard() {
               const total = project.issues.length;
               const pct = total === 0 ? 0 : Math.round((done / total) * 100);
               return (
-                <div key={project.id} className={styles.projectItem} onClick={() => navigate('/projects')}>
+                <div key={project.id} className={styles.projectItem} onClick={() => navigate(`/projects/${project.id}`)}>
                   <div className={styles.projectHeader}>
                     <div className={styles.projectDot} style={{ background: project.color }} />
                     <span className={styles.projectName}>{project.name}</span>

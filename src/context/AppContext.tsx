@@ -183,7 +183,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // auth 세션 감지
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    // onAuthStateChange가 초기 세션도 INITIAL_SESSION 이벤트로 전달하므로 getSession 불필요
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });

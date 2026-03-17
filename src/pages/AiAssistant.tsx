@@ -60,6 +60,13 @@ export default function AiAssistant() {
     await addAiChat(mode, 'user', content);
 
     try {
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      if (!apiKey) {
+        await addAiChat(mode, 'assistant', '⚠️ API 키 미설정: .env.local 파일에 VITE_OPENAI_API_KEY를 추가하고 재배포해 주세요.\nGitHub에서 배포 중이라면 Settings → Secrets → VITE_OPENAI_API_KEY도 추가해야 합니다.');
+        setLoading(false);
+        return;
+      }
+
       // 최근 6개 메시지(3턴)만 유지해서 토큰 비용 절감
       const HISTORY_LIMIT = 6;
       const history = currentChats
@@ -70,7 +77,7 @@ export default function AiAssistant() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-5-mini',
@@ -84,6 +91,12 @@ export default function AiAssistant() {
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        const errMsg = data.error?.message || `HTTP ${response.status}`;
+        console.error('OpenAI API error:', JSON.stringify(data));
+        await addAiChat(mode, 'assistant', `오류: ${errMsg}`);
+        return;
+      }
       const reply = data.choices?.[0]?.message?.content || '응답을 받지 못했습니다.';
       await addAiChat(mode, 'assistant', reply);
     } catch (e) {

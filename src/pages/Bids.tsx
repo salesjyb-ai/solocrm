@@ -68,11 +68,10 @@ export default function Bids() {
     if (!searchKeyword.trim()) return;
     setSearching(true); setSearchError(''); setSearchResults([]);
     try {
-      const { supabase } = await import('../supabase');
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
       const res = await fetch(`https://cozpygdrzzdwuupbahei.supabase.co/functions/v1/narajangteo-proxy?keyword=${encodeURIComponent(searchKeyword)}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvenB5Z2Ryenpkd3V1cGJhaGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDc5MzMsImV4cCI6MjA4ODM4MzkzM30.Pnquf4aBjhEdqS4Qrg0WDyic2tGTVBOc9i3MA7BXovo',
+        },
       });
       const json = await res.json();
       if (json.error) { setSearchError(json.error); return; }

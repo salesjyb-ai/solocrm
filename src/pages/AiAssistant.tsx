@@ -75,7 +75,8 @@ export default function AiAssistant() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${session?.access_token ?? 'anon'}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvenB5Z2Ryenpkd3V1cGJhaGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDc5MzMsImV4cCI6MjA4ODM4MzkzM30.Pnquf4aBjhEdqS4Qrg0WDyic2tGTVBOc9i3MA7BXovo',
           },
           body: JSON.stringify({
             systemPrompt: MODE_INFO[mode].systemPrompt,

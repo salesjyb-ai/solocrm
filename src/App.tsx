@@ -10,6 +10,9 @@ import Projects from './pages/Projects';
 import Tasks from './pages/Tasks';
 import Kanban from './pages/Kanban';
 import Boss from './pages/Boss';
+import Bids from './pages/Bids';
+import WeeklyReport from './pages/WeeklyReport';
+import AiAssistant from './pages/AiAssistant';
 import ProjectDetail from './pages/ProjectDetail';
 import './index.css';
 
@@ -30,6 +33,9 @@ function AppRoutes() {
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/kanban" element={<Kanban />} />
         <Route path="/boss" element={<Boss />} />
+        <Route path="/bids" element={<Bids />} />
+        <Route path="/weekly" element={<WeeklyReport />} />
+        <Route path="/ai" element={<AiAssistant />} />
       </Routes>
     </Layout>
   );

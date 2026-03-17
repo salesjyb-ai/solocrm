@@ -1,6 +1,40 @@
 export type LeadStatus = 'new' | 'contacted' | 'proposal' | 'won' | 'lost';
 export type IssueStatus = 'todo' | 'in_progress' | 'done';
 export type Priority = 'low' | 'medium' | 'high';
+export type BidStatus = 'preparing' | 'active' | 'won' | 'lost';
+export type WeeklyActivityType = 'call' | 'meeting' | 'email' | 'proposal' | 'new_contact';
+export type AiChatMode = 'research' | 'objection' | 'summary';
+export type AiChatRole = 'user' | 'assistant';
+
+export interface Bid {
+  id: string;
+  title: string;
+  agency: string;
+  deadline?: string;
+  amount?: number;
+  status: BidStatus;
+  memo?: string;
+  bidNo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WeeklyActivity {
+  id: string;
+  activityDate: string;
+  type: WeeklyActivityType;
+  count: number;
+  note?: string;
+  createdAt: string;
+}
+
+export interface AiChat {
+  id: string;
+  mode: AiChatMode;
+  role: AiChatRole;
+  content: string;
+  createdAt: string;
+}
 
 export interface Lead {
   id: string;

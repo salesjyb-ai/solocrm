@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { ToastItem, ToastType } from '../components/Toast';
-import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember } from '../types';
+import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember, Bid, BidStatus, WeeklyActivity, WeeklyActivityType, AiChat, AiChatMode, AiChatRole } from '../types';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -40,6 +40,16 @@ interface AppContextType {
   getLeadActivities: (leadId: string) => Activity[];
   toasts: ToastItem[];
   removeToast: (id: string) => void;
+  bids: Bid[];
+  addBid: (bid: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateBid: (id: string, fields: Partial<Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deleteBid: (id: string) => Promise<void>;
+  weeklyActivities: WeeklyActivity[];
+  addWeeklyActivity: (a: Omit<WeeklyActivity, 'id' | 'createdAt'>) => Promise<void>;
+  deleteWeeklyActivity: (id: string) => Promise<void>;
+  aiChats: AiChat[];
+  addAiChat: (mode: AiChatMode, role: AiChatRole, content: string) => Promise<void>;
+  clearAiChats: (mode: AiChatMode) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -113,6 +123,32 @@ function rowToBoss(r: Record<string, unknown>): BossItem {
   };
 }
 
+function rowToBid(r: Record<string, unknown>): Bid {
+  return {
+    id: r.id as string, title: r.title as string, agency: r.agency as string,
+    deadline: r.deadline as string | undefined, amount: r.amount as number | undefined,
+    status: r.status as BidStatus, memo: r.memo as string | undefined,
+    bidNo: r.bid_no as string | undefined,
+    createdAt: r.created_at as string, updatedAt: r.updated_at as string,
+  };
+}
+
+function rowToWeeklyActivity(r: Record<string, unknown>): WeeklyActivity {
+  return {
+    id: r.id as string, activityDate: r.activity_date as string,
+    type: r.type as WeeklyActivityType, count: r.count as number,
+    note: r.note as string | undefined, createdAt: r.created_at as string,
+  };
+}
+
+function rowToAiChat(r: Record<string, unknown>): AiChat {
+  return {
+    id: r.id as string, mode: r.mode as AiChatMode,
+    role: r.role as AiChatRole, content: r.content as string,
+    createdAt: r.created_at as string,
+  };
+}
+
 const statusLabel: Record<LeadStatus, string> = { new: '신규', contacted: '연락완료', proposal: '제안중', won: '수주', lost: '실패' };
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -122,6 +158,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [bossItems, setBossItems] = useState<BossItem[]>([]);
   const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [bids, setBids] = useState<Bid[]>([]);
+  const [weeklyActivities, setWeeklyActivities] = useState<WeeklyActivity[]>([]);
+  const [aiChats, setAiChats] = useState<AiChat[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -212,7 +251,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async function fetchAll() {
       setLoading(true);
       try {
-        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes] = await Promise.all([
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes] = await Promise.all([
           supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
@@ -220,6 +259,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_project_members').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_bids').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_weekly_activities').select('*').order('activity_date', { ascending: false }),
+          supabase.from('crm_ai_chats').select('*').order('created_at', { ascending: true }),
         ]);
         const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
         setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
@@ -235,6 +277,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           notes: r.notes as string | undefined, createdAt: r.created_at as string,
         })));
         setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+        setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
+        setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
+        setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
       } catch (err) {
         console.error('fetchAll 실패:', err);
         showToast('데이터를 불러오지 못했습니다. 새로고침해 주세요.', 'error');
@@ -319,7 +364,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!session) return;
     const fullSync = async () => {
       try {
-        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes] = await Promise.all([
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes] = await Promise.all([
           supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
@@ -327,6 +372,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supabase.from('crm_activities').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_boss_items').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_project_members').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_bids').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_weekly_activities').select('*').order('activity_date', { ascending: false }),
+          supabase.from('crm_ai_chats').select('*').order('created_at', { ascending: true }),
         ]);
         const issues = (issuesRes.data || []).map(r => rowToIssue(r as Record<string, unknown>));
         setLeads((leadsRes.data || []).map(r => rowToLead(r as Record<string, unknown>)));
@@ -342,6 +390,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           notes: r.notes as string | undefined, createdAt: r.created_at as string,
         })));
         setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+        setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
+        setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
+        setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
       } catch (err) {
         console.error('fullSync 실패:', err);
       } // fullSync 실패는 조용히 (30초 후 재시도)
@@ -479,10 +530,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (data) setActivities(prev => [rowToActivity(data as Record<string, unknown>), ...prev]);
   };
 
+
+  // ── Bids ──
+  const addBid = async (bid: Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const { data, error } = await supabase.from('crm_bids').insert({
+      title: bid.title, agency: bid.agency, deadline: bid.deadline || null,
+      amount: bid.amount || null, status: bid.status, memo: bid.memo || null, bid_no: bid.bidNo || null,
+    }).select().single();
+    if (error) { showToast('입찰 추가에 실패했습니다.', 'error'); return; }
+    if (data) setBids(prev => [rowToBid(data as Record<string, unknown>), ...prev]);
+  };
+
+  const updateBid = async (id: string, fields: Partial<Omit<Bid, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    const db: Record<string, unknown> = {};
+    if (fields.title !== undefined) db.title = fields.title;
+    if (fields.agency !== undefined) db.agency = fields.agency;
+    if (fields.deadline !== undefined) db.deadline = fields.deadline || null;
+    if (fields.amount !== undefined) db.amount = fields.amount || null;
+    if (fields.status !== undefined) db.status = fields.status;
+    if (fields.memo !== undefined) db.memo = fields.memo || null;
+    if (fields.bidNo !== undefined) db.bid_no = fields.bidNo || null;
+    const { data, error } = await supabase.from('crm_bids').update(db).eq('id', id).select().single();
+    if (error) { showToast('입찰 수정에 실패했습니다.', 'error'); return; }
+    if (data) setBids(prev => prev.map(b => b.id === id ? rowToBid(data as Record<string, unknown>) : b));
+  };
+
+  const deleteBid = async (id: string) => {
+    const { error } = await supabase.from('crm_bids').delete().eq('id', id);
+    if (error) { showToast('입찰 삭제에 실패했습니다.', 'error'); return; }
+    setBids(prev => prev.filter(b => b.id !== id));
+  };
+
+  // ── Weekly Activities ──
+  const addWeeklyActivity = async (a: Omit<WeeklyActivity, 'id' | 'createdAt'>) => {
+    const { data, error } = await supabase.from('crm_weekly_activities').insert({
+      activity_date: a.activityDate, type: a.type, count: a.count, note: a.note || null,
+    }).select().single();
+    if (error) { showToast('활동 추가에 실패했습니다.', 'error'); return; }
+    if (data) setWeeklyActivities(prev => [rowToWeeklyActivity(data as Record<string, unknown>), ...prev]);
+  };
+
+  const deleteWeeklyActivity = async (id: string) => {
+    const { error } = await supabase.from('crm_weekly_activities').delete().eq('id', id);
+    if (error) { showToast('활동 삭제에 실패했습니다.', 'error'); return; }
+    setWeeklyActivities(prev => prev.filter(a => a.id !== id));
+  };
+
+  // ── AI Chats ──
+  const addAiChat = async (mode: AiChatMode, role: AiChatRole, content: string) => {
+    const { data } = await supabase.from('crm_ai_chats').insert({ mode, role, content }).select().single();
+    if (data) setAiChats(prev => [...prev, rowToAiChat(data as Record<string, unknown>)]);
+  };
+
+  const clearAiChats = async (mode: AiChatMode) => {
+    await supabase.from('crm_ai_chats').delete().eq('mode', mode);
+    setAiChats(prev => prev.filter(c => c.mode !== mode));
+  };
+
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats }}>
       {children}
     </AppContext.Provider>
   );

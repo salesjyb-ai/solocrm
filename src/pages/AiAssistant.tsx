@@ -60,44 +60,37 @@ export default function AiAssistant() {
     await addAiChat(mode, 'user', content);
 
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        await addAiChat(mode, 'assistant', '⚠️ API 키 미설정: .env.local 파일에 VITE_OPENAI_API_KEY를 추가하고 재배포해 주세요.\nGitHub에서 배포 중이라면 Settings → Secrets → VITE_OPENAI_API_KEY도 추가해야 합니다.');
-        setLoading(false);
-        return;
-      }
-
       // 최근 6개 메시지(3턴)만 유지해서 토큰 비용 절감
       const HISTORY_LIMIT = 6;
       const history = currentChats
         .slice(-HISTORY_LIMIT)
         .map(c => ({ role: c.role as 'user' | 'assistant', content: c.content }));
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-5-mini',
-          max_completion_tokens: 1000,
-          messages: [
-            { role: 'system', content: MODE_INFO[mode].systemPrompt },
-            ...history,
-            { role: 'user', content },
-          ],
-        }),
-      });
+      const { supabase } = await import('../supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(
+        'https://cozpygdrzzdwuupbahei.supabase.co/functions/v1/openai-chat',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            systemPrompt: MODE_INFO[mode].systemPrompt,
+            messages: [...history, { role: 'user', content }],
+          }),
+        }
+      );
 
       const data = await response.json();
-      if (!response.ok) {
-        const errMsg = data.error?.message || `HTTP ${response.status}`;
-        console.error('OpenAI API error:', JSON.stringify(data));
+      if (!response.ok || data.error) {
+        const errMsg = data.error || `HTTP ${response.status}`;
         await addAiChat(mode, 'assistant', `오류: ${errMsg}`);
         return;
       }
-      const reply = data.choices?.[0]?.message?.content || '응답을 받지 못했습니다.';
+      const reply = data.reply || '응답을 받지 못했습니다.';
       await addAiChat(mode, 'assistant', reply);
     } catch (e) {
       await addAiChat(mode, 'assistant', `오류가 발생했습니다: ${String(e)}`);
@@ -181,7 +174,4 @@ export default function AiAssistant() {
       </div>
     </div>
   );
-} 
-
-
-
+}

@@ -81,7 +81,7 @@ export default function AiAssistant() {
         },
         body: JSON.stringify({
           model: 'gpt-5-mini',
-          max_tokens: 1000,
+          max_completion_tokens: 1000,
           messages: [
             { role: 'system', content: MODE_INFO[mode].systemPrompt },
             ...history,

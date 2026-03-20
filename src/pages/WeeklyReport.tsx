@@ -15,7 +15,7 @@ const TYPE_COLOR: Record<WeeklyActivityType, string> = {
 };
 
 function getKSTToday() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
+  return new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
 }
 
 function getWeekRange(offset: number): { start: string; end: string; label: string } {

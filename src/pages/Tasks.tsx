@@ -11,7 +11,7 @@ type ViewMode = 'date' | 'all';
 type TabFilter = 'today' | 'upcoming' | 'all';
 
 function getKSTToday() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
+  return new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
 }
 
 function formatDateLabel(dateStr: string, today: string) {
@@ -98,8 +98,7 @@ export default function Tasks() {
   const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const today = getKSTToday();
-  const todayDate = new Date(today + 'T00:00:00');
-  const weekLater = new Date(todayDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const weekLater = new Date(new Date().getTime() + 9 * 60 * 60 * 1000 + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   // 달력에서 날짜 선택 시 해당 날짜만 필터링
   const handleCalendarSelect = (date: string) => {

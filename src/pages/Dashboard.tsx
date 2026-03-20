@@ -18,7 +18,7 @@ function formatKRW(val: number) {
 export default function Dashboard() {
   const { tasks, leads, projects, toggleTask } = useApp();
   const navigate = useNavigate();
-  const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
+  const today = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const todayTasks = tasks.filter(t => t.dueDate && t.dueDate <= today).sort((a, b) => Number(a.done) - Number(b.done));
   const activeLeads = leads.filter(l => l.status !== 'won' && l.status !== 'lost');

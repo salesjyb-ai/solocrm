@@ -22,7 +22,7 @@ const STATUS_BG: Record<BidStatus, string> = {
 
 function getDday(deadline?: string): { label: string; urgent: boolean } {
   if (!deadline) return { label: '-', urgent: false };
-  const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
+  const today = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
   const diff = Math.ceil((new Date(deadline + 'T00:00:00').getTime() - new Date(today + 'T00:00:00').getTime()) / 86400000);
   if (diff < 0) return { label: '종료', urgent: false };
   if (diff === 0) return { label: 'D-day', urgent: true };

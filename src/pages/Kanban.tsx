@@ -77,7 +77,7 @@ export default function Kanban() {
   const getIssues = (status: IssueStatus): Issue[] =>
     project?.issues.filter(i => i.status === status) || [];
 
-  const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })).toISOString().split('T')[0];
+  const today = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   return (
     <div className={styles.page}>

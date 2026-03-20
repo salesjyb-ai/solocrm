@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2, X } from 'lucide-react';
+import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2, X, Pencil } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
 import type { Task, Subtask } from '../types';
@@ -439,22 +439,23 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
                   autoFocus
                 />
               ) : (
-                <span
-                  className={styles.subTitle}
-                  onDoubleClick={() => !sub.done && startEditSubtask(sub)}
-                  title={sub.done ? '' : '더블클릭으로 수정'}
-                >
-                  {sub.title}
-                </span>
+                <span className={styles.subTitle}>{sub.title}</span>
               )}
-              {/* 편집 중일 때 저장/취소 버튼 */}
+              {/* 편집 중일 때 저장/취소 / 아닐 때 수정+삭제 버튼 */}
               {editingSubId === sub.id ? (
                 <div className={styles.subEditActions}>
                   <button className={styles.subSaveBtn} onClick={() => saveEditSubtask(sub.id)}>저장</button>
                   <button className={styles.subCancelBtn} onClick={cancelEditSubtask}><X size={11} /></button>
                 </div>
               ) : (
-                <button className={styles.subDeleteBtn} onClick={() => deleteSubtask(sub.id)}><X size={11} /></button>
+                <div className={styles.subActions}>
+                  {!sub.done && (
+                    <button className={styles.subEditBtn} onClick={() => startEditSubtask(sub)} title="수정">
+                      <Pencil size={11} />
+                    </button>
+                  )}
+                  <button className={styles.subDeleteBtn} onClick={() => deleteSubtask(sub.id)} title="삭제"><X size={11} /></button>
+                </div>
               )}
             </div>
           ))}

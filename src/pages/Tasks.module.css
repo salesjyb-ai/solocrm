@@ -98,8 +98,11 @@
 .subChecked { background: var(--accent); border-color: var(--accent); color: #fff; }
 .subTitle { flex: 1; font-size: 12.5px; color: var(--text-secondary); }
 .subDone .subTitle { text-decoration: line-through; }
-.subDeleteBtn { color: var(--text-muted); display: flex; align-items: center; opacity: 0; transition: opacity var(--transition); }
-.subtaskRow:hover .subDeleteBtn { opacity: 1; }
+.subActions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity var(--transition); }
+.subtaskRow:hover .subActions { opacity: 1; }
+.subEditBtn { color: var(--text-muted); display: flex; align-items: center; padding: 2px; border-radius: 3px; cursor: pointer; }
+.subEditBtn:hover { color: var(--accent); }
+.subDeleteBtn { color: var(--text-muted); display: flex; align-items: center; padding: 2px; border-radius: 3px; cursor: pointer; }
 .subDeleteBtn:hover { color: var(--status-lost); }
 .subtaskInput { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
 .subInput { flex: 1; font-size: 12.5px; color: var(--text-primary); background: transparent; outline: none; border-bottom: 1px solid var(--border); padding-bottom: 3px; }

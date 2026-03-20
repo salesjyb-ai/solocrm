@@ -78,7 +78,7 @@
 
 .check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all var(--transition); }
 .checked { background: var(--accent); border-color: var(--accent); color: #fff; }
-.taskBody { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; cursor: pointer; }
+.taskBody { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .taskTitle { font-size: 13.5px; color: var(--text-primary); }
 .done .taskTitle { text-decoration: line-through; }
 .subCount { font-size: 11px; background: var(--bg); border: 1px solid var(--border); padding: 1px 7px; border-radius: 10px; color: var(--text-muted); }
@@ -144,3 +144,23 @@
   border-color: #4a4840;
   color: #d0cdc5;
 }
+
+/* 완료 버튼 (분리된 버튼) */
+.completeBtn { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all var(--transition); color: transparent; }
+.completeBtn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg, color-mix(in srgb, var(--accent) 10%, transparent)); }
+.completeBtnDone { background: var(--accent); border-color: var(--accent); color: #fff; }
+.completeBtnDone:hover { background: var(--accent); border-color: var(--accent); color: #fff; opacity: 0.8; }
+
+/* 하위 업무 완료 버튼 */
+.subCompleteBtn { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all var(--transition); color: transparent; }
+.subCompleteBtn:hover { border-color: var(--accent); color: var(--accent); }
+.subCompleteBtnDone { background: var(--accent); border-color: var(--accent); color: #fff; }
+.subCompleteBtnDone:hover { opacity: 0.8; }
+
+/* 하위 업무 편집 */
+.subEditInput { flex: 1; font-size: 12.5px; padding: 2px 6px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--bg-primary); color: var(--text-primary); outline: none; }
+.subEditActions { display: flex; align-items: center; gap: 4px; }
+.subSaveBtn { font-size: 11px; padding: 2px 8px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; }
+.subSaveBtn:hover { opacity: 0.85; }
+.subCancelBtn { color: var(--text-muted); display: flex; align-items: center; cursor: pointer; }
+.subCancelBtn:hover { color: var(--status-lost); }

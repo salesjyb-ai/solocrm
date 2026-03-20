@@ -344,6 +344,8 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
   const overdue = !task.done && task.dueDate < today;
   const [expanded, setExpanded] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const [editingSubVal, setEditingSubVal] = useState('');
   const subtasks = task.subtasks || [];
   const doneCount = subtasks.filter(s => s.done).length;
 
@@ -363,13 +365,37 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
     onUpdateSubtasks(subtasks.filter(s => s.id !== id));
   };
 
+  const startEditSubtask = (sub: Subtask) => {
+    setEditingSubId(sub.id);
+    setEditingSubVal(sub.title);
+  };
+
+  const saveEditSubtask = (id: string) => {
+    const title = editingSubVal.trim();
+    if (!title) return;
+    onUpdateSubtasks(subtasks.map(s => s.id === id ? { ...s, title } : s));
+    setEditingSubId(null);
+    setEditingSubVal('');
+  };
+
+  const cancelEditSubtask = () => {
+    setEditingSubId(null);
+    setEditingSubVal('');
+  };
+
   return (
     <div className={`${styles.taskWrap} ${task.done ? styles.done : ''}`}>
       <div className={`${styles.taskRow} ${overdue ? styles.overdue : ''}`}>
-        <div className={`${styles.check} ${task.done ? styles.checked : ''}`} onClick={onToggle}>
-          {task.done && <Check size={11} strokeWidth={3} />}
-        </div>
-        <div className={styles.taskBody} onClick={onToggle}>
+        {/* 완료 버튼 (체크박스 → 별도 버튼으로 분리) */}
+        <button
+          className={`${styles.completeBtn} ${task.done ? styles.completeBtnDone : ''}`}
+          onClick={onToggle}
+          title={task.done ? '완료 취소' : '완료'}
+        >
+          {task.done ? <Check size={11} strokeWidth={3} /> : <Check size={11} strokeWidth={2} />}
+        </button>
+        {/* taskBody는 클릭해도 아무 동작 없음 */}
+        <div className={styles.taskBody}>
           <span className={styles.taskTitle}>{task.title}</span>
           {subtasks.length > 0 && (
             <span className={styles.subCount}>{doneCount}/{subtasks.length}</span>
@@ -377,7 +403,7 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
           {task.linkedTo && <span className={styles.taskLink}>{task.linkedTo.type === 'lead' ? '🤝' : '📁'} {task.linkedTo.name}</span>}
         </div>
         {overdue && <AlertCircle size={13} className={styles.overdueIcon} />}
-        {/* 서브태스크 토글 */}
+        {/* 하위 업무 토글 */}
         <button className={styles.subToggleBtn} onClick={() => setExpanded(p => !p)} title="하위 업무">
           <Plus size={13} />
           {subtasks.length > 0 && (expanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />)}
@@ -387,16 +413,49 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
         </button>
       </div>
 
-      {/* 서브태스크 패널 */}
+      {/* 하위 업무 패널 */}
       {expanded && (
         <div className={styles.subtaskPanel}>
           {subtasks.map(sub => (
             <div key={sub.id} className={`${styles.subtaskRow} ${sub.done ? styles.subDone : ''}`}>
-              <div className={`${styles.subCheck} ${sub.done ? styles.subChecked : ''}`} onClick={() => toggleSubtask(sub.id)}>
+              {/* 하위 업무 완료 버튼 */}
+              <button
+                className={`${styles.subCompleteBtn} ${sub.done ? styles.subCompleteBtnDone : ''}`}
+                onClick={() => toggleSubtask(sub.id)}
+                title={sub.done ? '완료 취소' : '완료'}
+              >
                 {sub.done && <Check size={9} strokeWidth={3} />}
-              </div>
-              <span className={styles.subTitle}>{sub.title}</span>
-              <button className={styles.subDeleteBtn} onClick={() => deleteSubtask(sub.id)}><X size={11} /></button>
+              </button>
+              {/* 하위 업무 제목 - 편집 모드 */}
+              {editingSubId === sub.id ? (
+                <input
+                  className={styles.subEditInput}
+                  value={editingSubVal}
+                  onChange={e => setEditingSubVal(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') saveEditSubtask(sub.id);
+                    if (e.key === 'Escape') cancelEditSubtask();
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <span
+                  className={styles.subTitle}
+                  onDoubleClick={() => !sub.done && startEditSubtask(sub)}
+                  title={sub.done ? '' : '더블클릭으로 수정'}
+                >
+                  {sub.title}
+                </span>
+              )}
+              {/* 편집 중일 때 저장/취소 버튼 */}
+              {editingSubId === sub.id ? (
+                <div className={styles.subEditActions}>
+                  <button className={styles.subSaveBtn} onClick={() => saveEditSubtask(sub.id)}>저장</button>
+                  <button className={styles.subCancelBtn} onClick={cancelEditSubtask}><X size={11} /></button>
+                </div>
+              ) : (
+                <button className={styles.subDeleteBtn} onClick={() => deleteSubtask(sub.id)}><X size={11} /></button>
+              )}
             </div>
           ))}
           <div className={styles.subtaskInput}>

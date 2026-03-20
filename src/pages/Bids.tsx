@@ -29,7 +29,7 @@ function getDday(deadline?: string): { label: string; urgent: boolean } {
   return { label: `D-${diff}`, urgent: diff <= 7 };
 }
 
-interface NaraItem { bidNo: string; title: string; agency: string; deadline: string; amount: number | null; }
+interface NaraItem { bidNo: string; title: string; agency: string; deadline: string; amount: number | null; stage?: string; bizType?: string; }
 
 export default function Bids() {
   const { bids, addBid, updateBid, deleteBid } = useApp();
@@ -41,6 +41,7 @@ export default function Bids() {
   const [searchResults, setSearchResults] = useState<NaraItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [searchStats, setSearchStats] = useState<{ bidCount: number; preCount: number } | null>(null);
   const INIT_FORM = { title: '', agency: '', deadline: '', amount: '', status: 'preparing' as BidStatus, memo: '', bidNo: '' };
   const [form, setForm] = useState(INIT_FORM);
 
@@ -69,13 +70,12 @@ export default function Bids() {
     setSearching(true); setSearchError(''); setSearchResults([]);
     try {
       const res = await fetch(`https://cozpygdrzzdwuupbahei.supabase.co/functions/v1/narajangteo-proxy?keyword=${encodeURIComponent(searchKeyword)}`, {
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvenB5Z2Ryenpkd3V1cGJhaGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDc5MzMsImV4cCI6MjA4ODM4MzkzM30.Pnquf4aBjhEdqS4Qrg0WDyic2tGTVBOc9i3MA7BXovo',
-        },
+        headers: { 'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvenB5Z2Ryenpkd3V1cGJhaGVpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI4MDc5MzMsImV4cCI6MjA4ODM4MzkzM30.Pnquf4aBjhEdqS4Qrg0WDyic2tGTVBOc9i3MA7BXovo' },
       });
       const json = await res.json();
       if (json.error) { setSearchError(json.error); return; }
       setSearchResults(json.items || []);
+      setSearchStats({ bidCount: json.bidCount || 0, preCount: json.preCount || 0 });
     } catch (e) { setSearchError(String(e)); }
     finally { setSearching(false); }
   };
@@ -134,7 +134,6 @@ export default function Bids() {
         })}
       </div>
 
-      {/* 나라장터 검색 모달 */}
       <Modal open={searchOpen} onClose={() => { setSearchOpen(false); setSearchResults([]); setSearchKeyword(''); }} title="나라장터 공고 검색">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -147,18 +146,35 @@ export default function Bids() {
           </div>
           {searchError && (
             <div style={{ fontSize: 12, color: 'var(--status-lost)', padding: '8px 12px', background: 'var(--status-lost-bg)', borderRadius: 'var(--radius-sm)' }}>
-              {searchError.includes('API key') ? '나라장터 API 키가 설정되지 않았습니다. NARA_API_KEY를 Edge Function 환경변수에 설정해 주세요.' : searchError}
+              {searchError.includes('API key') ? '나라장터 API 키가 설정되지 않았습니다.' : searchError}
             </div>
           )}
           {searchResults.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
+              {searchStats && (
+                <div style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--text-secondary)', paddingBottom: 4 }}>
+                  <span>총 {searchResults.length}건</span>
+                  {searchStats.preCount > 0 && <span>· 사전규격 {searchStats.preCount}건</span>}
+                  {searchStats.bidCount > 0 && <span>· 입찰공고 {searchStats.bidCount}건</span>}
+                </div>
+              )}
               {searchResults.map(item => (
-                <div key={item.bidNo} style={{ padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border)' }}
+                <div key={item.bidNo || item.title} style={{ padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: '1px solid var(--border)' }}
                   onClick={() => selectNaraItem(item)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    {item.stage && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4,
+                        background: item.stage === '사전규격' ? 'var(--status-preparing-bg)' : 'var(--status-active-bg)',
+                        color: item.stage === '사전규격' ? 'var(--status-preparing)' : 'var(--status-active)',
+                      }}>{item.stage}</span>
+                    )}
+                    {item.bizType && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{item.bizType}</span>}
+                  </div>
                   <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 4 }}>{item.title}</div>
                   <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
                     <span>{item.agency}</span>
-                    {item.deadline && <span>마감 {item.deadline}</span>}
+                    {item.deadline && <span>{item.stage === '사전규격' ? '의견마감' : '입찰마감'} {item.deadline}</span>}
                     {item.amount && <span>{(item.amount / 100000000).toFixed(1)}억</span>}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 4 }}>클릭하면 자동 입력됩니다 <ExternalLink size={10} style={{ verticalAlign: 'middle' }} /></div>
@@ -172,7 +188,6 @@ export default function Bids() {
         </div>
       </Modal>
 
-      {/* 추가/수정 모달 */}
       <Modal open={modalOpen} onClose={closeModal} title={editingBid ? '입찰 수정' : '입찰 추가'}>
         <div className={f.form}>
           <div className={f.field}>

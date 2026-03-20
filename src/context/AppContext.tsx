@@ -57,6 +57,7 @@ const AppContext = createContext<AppContextType | null>(null);
 function rowToLead(r: Record<string, unknown>): Lead {
   return {
     id: r.id as string, name: r.name as string, company: r.company as string,
+    dealName: r.deal_name as string | undefined,
     contact: r.contact as string | undefined, phone: r.phone as string | undefined, value: r.value as number,
     status: r.status as LeadStatus, nextAction: r.next_action as string | undefined,
     nextActionDate: r.next_action_date as string | undefined,
@@ -404,7 +405,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const addLead = async (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => {
     const { data, error } = await supabase.from('crm_leads').insert({
-      name: lead.name, company: lead.company, contact: lead.contact, phone: lead.phone,
+      name: lead.name, company: lead.company, deal_name: lead.dealName || null, contact: lead.contact, phone: lead.phone,
       value: lead.value, status: lead.status, notes: lead.notes,
       next_action: lead.nextAction, next_action_date: lead.nextActionDate || null,
     }).select().single();
@@ -416,6 +417,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const dbFields: Record<string, unknown> = {};
     if (fields.name !== undefined) dbFields.name = fields.name;
     if (fields.company !== undefined) dbFields.company = fields.company;
+    if (fields.dealName !== undefined) dbFields.deal_name = fields.dealName || null;
     if (fields.contact !== undefined) dbFields.contact = fields.contact;
     if (fields.phone !== undefined) dbFields.phone = fields.phone;
     if (fields.value !== undefined) dbFields.value = fields.value;

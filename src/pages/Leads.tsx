@@ -18,7 +18,7 @@ export default function Leads() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<LeadStatus | 'all'>('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', company: '', contact: '', phone: '', value: '', status: 'new' as LeadStatus, nextAction: '', nextActionDate: '' });
+  const [form, setForm] = useState({ name: '', company: '', dealName: '', contact: '', phone: '', value: '', status: 'new' as LeadStatus, nextAction: '', nextActionDate: '' });
 
   const filtered = leads.filter(l => {
     const matchSearch = l.name.includes(search.trim()) || l.company.includes(search.trim());
@@ -28,9 +28,9 @@ export default function Leads() {
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.company.trim()) return;
-    await addLead({ name: form.name, company: form.company, contact: form.contact, phone: form.phone, value: Number(form.value) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate });
+    await addLead({ name: form.name, company: form.company, dealName: form.dealName, contact: form.contact, phone: form.phone, value: Number(form.value) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate });
     setModalOpen(false);
-    setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' });
+    setForm({ name: '', company: '', dealName: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' });
   };
 
   const stats = statusOrder.map(s => ({ status: s, count: leads.filter(l => l.status === s).length, value: leads.filter(l => l.status === s).reduce((sum, l) => sum + l.value, 0) }));
@@ -94,6 +94,7 @@ export default function Leads() {
                     <div>
                       <div className={styles.name}>{lead.name}</div>
                       <div className={styles.company}>{lead.company}</div>
+                      {lead.dealName && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>📋 {lead.dealName}</div>}
                     </div>
                   </div>
                 </td>
@@ -114,7 +115,7 @@ export default function Leads() {
         </table>
       </div>
 
-      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' }); }} title="새 리드 추가">
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setForm({ name: '', company: '', dealName: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' }); }} title="새 리드 추가">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className={f.row}>
             <div className={f.field}>
@@ -125,6 +126,10 @@ export default function Leads() {
               <label className={f.label}>회사명 *</label>
               <input className={f.input} placeholder="테크스타트 주식회사" value={form.company} onChange={e => setForm(p => ({...p, company: e.target.value}))} />
             </div>
+          </div>
+          <div className={f.field}>
+            <label className={f.label}>사업명</label>
+            <input className={f.input} placeholder="AI 기반 민원처리 자동화 시스템 구축" value={form.dealName} onChange={e => setForm(p => ({...p, dealName: e.target.value}))} />
           </div>
           <div className={f.row}>
             <div className={f.field}>
@@ -169,7 +174,7 @@ export default function Leads() {
             </div>
           </div>
           <div className={f.actions}>
-            <button className={f.btnSecondary} onClick={() => { setModalOpen(false); setForm({ name: '', company: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' }); }}>취소</button>
+            <button className={f.btnSecondary} onClick={() => { setModalOpen(false); setForm({ name: '', company: '', dealName: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' }); }}>취소</button>
             <button className={f.btnPrimary} onClick={handleSubmit}>추가</button>
           </div>
         </div>

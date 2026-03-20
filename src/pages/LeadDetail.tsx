@@ -46,7 +46,7 @@ export default function LeadDetail() {
   const saveEdit = async () => {
     if (!editField) return;
     const map: Record<string, keyof typeof lead> = {
-      name: 'name', company: 'company', contact: 'contact', phone: 'phone',
+      name: 'name', company: 'company', dealName: 'dealName', contact: 'contact', phone: 'phone',
       value: 'value', nextAction: 'nextAction', nextActionDate: 'nextActionDate',
     };
     const key = map[editField];
@@ -126,6 +126,7 @@ export default function LeadDetail() {
               <div>
                 <h2 className={styles.leadName}>{lead.name}</h2>
                 <p className={styles.leadCompany}>{lead.company}</p>
+                {lead.dealName && <p style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>📋 {lead.dealName}</p>}
               </div>
               <div className={styles.statusWrap}>
                 <LeadStatusSelect value={lead.status} onChange={handleStatusChange} />
@@ -135,6 +136,7 @@ export default function LeadDetail() {
             <div className={styles.infoGrid}>
               <EditableField field="name" label="담당자" value={lead.name} />
               <EditableField field="company" label="회사" value={lead.company} />
+              <EditableField field="dealName" label="사업명" value={lead.dealName || ''} />
               <EditableField field="contact" label="이메일" value={lead.contact || ''} />
               <EditableField field="phone" label="휴대폰" value={lead.phone || ''} />
               <EditableField field="value" label="딜 금액" value={String(lead.value)} type="number" />

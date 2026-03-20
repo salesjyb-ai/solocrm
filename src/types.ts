@@ -40,6 +40,7 @@ export interface Lead {
   id: string;
   name: string;
   company: string;
+  dealName?: string;
   status: LeadStatus;
   value: number;
   contact?: string;

@@ -1,0 +1,81 @@
+.page { padding: 32px; max-width: 900px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.subtitle { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+
+.searchWrap { position: relative; margin-bottom: 20px; }
+.searchIcon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.search { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); font-size: 13.5px; outline: none; transition: border-color var(--transition); box-sizing: border-box; }
+.search:focus { border-color: var(--accent); }
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+.empty { text-align: center; color: var(--text-muted); padding: 60px 20px; font-size: 14px; }
+
+/* 카드 */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color var(--transition); }
+.card:hover { border-color: var(--accent-muted); }
+.cardOpen { border-color: var(--accent); }
+
+.cardHeader { display: flex; align-items: center; gap: 12px; padding: 16px 18px; cursor: pointer; user-select: none; }
+.cardHeader:hover { background: var(--bg); }
+
+.avatar { width: 38px; height: 38px; background: var(--accent-light); color: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; flex-shrink: 0; }
+.nameBlock { flex: 1; min-width: 0; }
+.companyName { font-size: 14px; font-weight: 600; display: block; }
+.lastContact { font-size: 11px; color: var(--text-muted); margin-top: 1px; display: block; }
+
+.badges { display: flex; gap: 5px; flex-wrap: wrap; }
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+
+.toggle { color: var(--text-muted); display: flex; align-items: center; flex-shrink: 0; }
+
+/* 상세 */
+.detail { padding: 0 18px 18px; border-top: 1px solid var(--border-subtle); }
+
+.section { margin-top: 18px; }
+.section:first-child { margin-top: 14px; }
+
+.sectionTitle { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+.sectionCount { background: var(--bg-secondary); color: var(--text-muted); font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.sectionBadge { background: var(--status-lost-bg); color: var(--status-lost); font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+
+/* 리드/입찰 아이템 */
+.itemList { display: flex; flex-direction: column; gap: 5px; }
+.leadItem { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg); border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); }
+.leadItem:hover { background: var(--bg-secondary); }
+.leadItem:hover .extIcon { opacity: 1; }
+
+.itemLeft { flex: 1; min-width: 0; }
+.itemTitle { font-size: 13px; font-weight: 500; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.itemSub { font-size: 11px; color: var(--text-muted); display: block; margin-top: 1px; }
+.itemRight { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.itemValue { font-size: 12px; font-weight: 600; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+.itemDate { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 3px; }
+.statusChip { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+.extIcon { color: var(--text-muted); opacity: 0; transition: opacity var(--transition); }
+
+/* 할일 */
+.taskItem { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg); border-radius: var(--radius-sm); cursor: pointer; transition: background var(--transition); }
+.taskItem:hover { background: var(--bg-secondary); }
+.taskDone .itemTitle { text-decoration: line-through; color: var(--text-muted); }
+.taskCheck { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; }
+.taskChecked { background: var(--accent); border-color: var(--accent); }
+
+/* 타임라인 */
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timelineItem { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
+.timelineItem:last-child { border-bottom: none; }
+.timelineDot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.timelineBody { flex: 1; min-width: 0; }
+.timelineType { font-size: 11px; font-weight: 700; margin-right: 6px; }
+.timelineContent { font-size: 12.5px; color: var(--text-primary); }
+.timelineDate { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+
+/* 연락처 */
+.contactList { display: flex; flex-direction: column; gap: 6px; }
+.contactItem { display: flex; align-items: center; gap: 12px; padding: 7px 12px; background: var(--bg); border-radius: var(--radius-sm); flex-wrap: wrap; }
+.contactName { font-size: 13px; font-weight: 600; min-width: 80px; }
+.contactLink { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); text-decoration: none; }
+.contactLink:hover { text-decoration: underline; }
+
+.emptyDetail { font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0 4px; }

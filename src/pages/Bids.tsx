@@ -144,6 +144,31 @@ export default function Bids() {
               {searching ? '검색 중...' : '검색'}
             </button>
           </div>
+          {/* 나라장터 바로가기 */}
+          <a
+            href={searchKeyword.trim()
+              ? `https://www.g2b.go.kr/pt/menu/selectSubFrame.do?framesrc=/pt/menu/frameBidNoticeList.do?bidNtceNm=${encodeURIComponent(searchKeyword.trim())}`
+              : 'https://www.g2b.go.kr/pt/menu/selectSubFrame.do?framesrc=/pt/menu/frameBidNoticeList.do'
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 12, color: 'var(--accent)',
+              padding: '7px 12px',
+              background: 'var(--bg-secondary)',
+              borderRadius: 'var(--radius-sm)',
+              border: '1px solid var(--border)',
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}
+          >
+            <ExternalLink size={13} />
+            {searchKeyword.trim()
+              ? `나라장터에서 "${searchKeyword.trim()}" 직접 검색하기`
+              : '나라장터 입찰공고 바로가기'
+            }
+          </a>
           {searchError && (
             <div style={{ fontSize: 12, color: 'var(--status-lost)', padding: '8px 12px', background: 'var(--status-lost-bg)', borderRadius: 'var(--radius-sm)' }}>
               {searchError.includes('API key') ? '나라장터 API 키가 설정되지 않았습니다.' : searchError}

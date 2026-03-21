@@ -5,7 +5,7 @@
 .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
 /* KPI */
-.kpiRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.kpiRow { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
 .kpiCard {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 16px 18px;
@@ -35,7 +35,7 @@
 .pieCnt { color: var(--text-muted); margin-left: 2px; }
 
 /* 3 sections */
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 .sectionHeader { display: flex; align-items: center; justify-content: space-between; }
 .sectionTitle { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
@@ -81,6 +81,7 @@
 .issueChip { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text-secondary); }
 .issueChip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+@media (max-width: 1300px) { .grid { grid-template-columns: repeat(2, 1fr); } .kpiRow { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 1100px) { .chartRow { grid-template-columns: 1fr 1fr; } .chartRow > :last-child { grid-column: span 2; } }
-@media (max-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } .kpiRow { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } .kpiRow { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) { .page { padding: 16px; } .grid { grid-template-columns: 1fr; } .chartRow { grid-template-columns: 1fr; } .chartRow > :last-child { grid-column: span 1; } .kpiRow { grid-template-columns: repeat(2, 1fr); } }

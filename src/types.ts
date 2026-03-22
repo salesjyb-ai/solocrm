@@ -129,3 +129,31 @@ export interface ProjectMember {
   notes?: string;
   createdAt: string;
 }
+
+export type CompetitorBidResult = 'won_us' | 'won_them' | 'other';
+
+export interface CompetitorBid {
+  id: string;
+  competitorId: string;
+  bidId?: string;
+  bidTitle: string;
+  bidAgency?: string;
+  bidDate?: string;
+  result?: CompetitorBidResult;
+  memo?: string;
+  createdAt: string;
+}
+
+export interface Competitor {
+  id: string;
+  name: string;
+  size?: string;
+  mainField?: string;
+  bidTypes?: string;
+  strengths?: string;
+  weaknesses?: string;
+  notes?: string;
+  bids: CompetitorBid[];
+  createdAt: string;
+  updatedAt: string;
+}

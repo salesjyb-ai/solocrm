@@ -15,6 +15,7 @@ import WeeklyReport from './pages/WeeklyReport';
 import AiAssistant from './pages/AiAssistant';
 import ProjectDetail from './pages/ProjectDetail';
 import Customers from './pages/Customers';
+import Competitors from './pages/Competitors';
 import './index.css';
 
 function AppRoutes() {
@@ -30,6 +31,7 @@ function AppRoutes() {
         <Route path="/leads" element={<Leads />} />
         <Route path="/leads/:id" element={<LeadDetail />} />
         <Route path="/customers" element={<Customers />} />
+        <Route path="/competitors" element={<Competitors />} />
         <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/tasks" element={<Tasks />} />

@@ -1,0 +1,71 @@
+.page { padding: 32px; max-width: 900px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 12px; }
+.title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+.subtitle { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
+.addBtn { display: flex; align-items: center; gap: 7px; background: var(--accent); color: #fff; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; transition: opacity var(--transition); white-space: nowrap; cursor: pointer; }
+.addBtn:hover { opacity: 0.85; }
+
+.empty { text-align: center; color: var(--text-muted); padding: 60px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.empty p { font-size: 14px; margin: 0; }
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+
+/* 카드 */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color var(--transition); }
+.card:hover { border-color: var(--accent-muted); }
+.cardOpen { border-color: var(--accent); }
+
+.cardHeader { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; }
+.headerLeft { display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer; min-width: 0; }
+.headerLeft:hover { opacity: 0.85; }
+.avatar { width: 36px; height: 36px; background: var(--status-lost-bg); color: var(--status-lost); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+.nameBlock { flex: 1; min-width: 0; }
+.companyName { font-size: 14px; font-weight: 600; display: block; }
+.meta { font-size: 11.5px; color: var(--text-muted); display: flex; gap: 8px; margin-top: 2px; }
+.meta span::before { content: '·'; margin-right: 8px; }
+.meta span:first-child::before { content: ''; margin-right: 0; }
+
+.stats { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.statItem { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; }
+.statRate { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-light); padding: 2px 7px; border-radius: 10px; }
+.chevron { color: var(--text-muted); flex-shrink: 0; }
+
+.headerActions { display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px; }
+.headerActions button { color: var(--text-muted); padding: 6px; border-radius: var(--radius-xs); display: flex; align-items: center; transition: all var(--transition); cursor: pointer; }
+.headerActions button:hover { background: var(--bg-secondary); color: var(--text-primary); }
+
+/* 상세 */
+.detail { padding: 0 18px 18px; border-top: 1px solid var(--border-subtle); }
+.infoRow { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); }
+.infoLabel { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-secondary); width: 130px; flex-shrink: 0; margin-top: 1px; }
+.infoValue { font-size: 13px; color: var(--text-primary); flex: 1; }
+
+.swRow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.swBox { border: 1px solid; border-radius: var(--radius-sm); padding: 12px 14px; }
+.swTitle { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+.swContent { font-size: 12.5px; color: var(--text-primary); white-space: pre-wrap; line-height: 1.5; }
+
+.notesBox { display: flex; gap: 10px; padding: 10px 0; margin-top: 4px; align-items: flex-start; }
+.notesText { font-size: 12.5px; color: var(--text-secondary); flex: 1; white-space: pre-wrap; line-height: 1.5; }
+
+/* 입찰 이력 */
+.bidsSection { margin-top: 16px; }
+.bidsHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.bidsTitle { font-size: 12px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.4px; display: flex; align-items: center; gap: 6px; }
+.count { background: var(--bg-secondary); color: var(--text-muted); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+.addBidBtn { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); font-weight: 600; padding: 4px 10px; border-radius: var(--radius-xs); border: 1px solid var(--accent-muted); transition: all var(--transition); cursor: pointer; }
+.addBidBtn:hover { background: var(--accent-light); }
+
+.emptyBids { font-size: 12.5px; color: var(--text-muted); text-align: center; padding: 16px 0; }
+.bidList { display: flex; flex-direction: column; gap: 6px; }
+.bidItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); }
+.bidLeft { flex: 1; min-width: 0; }
+.bidTitle { font-size: 13px; font-weight: 500; display: block; }
+.bidAgency { font-size: 11.5px; color: var(--text-muted); margin-right: 8px; }
+.bidDate { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.bidMemo { font-size: 11.5px; color: var(--text-secondary); display: block; margin-top: 2px; }
+.bidRight { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.resultChip { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+.delBidBtn { color: var(--text-muted); display: flex; align-items: center; padding: 3px; border-radius: 3px; cursor: pointer; opacity: 0; transition: opacity var(--transition); }
+.bidItem:hover .delBidBtn { opacity: 1; }
+.delBidBtn:hover { color: var(--status-lost); }

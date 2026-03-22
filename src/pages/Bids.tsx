@@ -32,7 +32,7 @@ function getDday(deadline?: string): { label: string; urgent: boolean } {
 interface NaraItem { bidNo: string; title: string; agency: string; deadline: string; amount: number | null; stage?: string; bizType?: string; }
 
 export default function Bids() {
-  const { bids, addBid, updateBid, deleteBid } = useApp();
+  const { bids, addBid, updateBid, deleteBid, competitors } = useApp();
   const [filterStatus, setFilterStatus] = useState<BidStatus | 'all'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBid, setEditingBid] = useState<Bid | null>(null);
@@ -245,6 +245,17 @@ export default function Bids() {
             <label className={f.label}>상태</label>
             <select className={f.select} value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value as BidStatus }))}>
               {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+          <div className={f.field}>
+            <label className={f.label}>경쟁사 (알고 있는 경우)</label>
+            <select className={f.select} onChange={e => {
+              if (!e.target.value) return;
+              setForm(p => ({ ...p, memo: p.memo ? `경쟁사: ${e.target.value}\n${p.memo}` : `경쟁사: ${e.target.value}` }));
+              e.target.value = '';
+            }}>
+              <option value="">등록된 경쟁사에서 선택해서 메모에 추가</option>
+              {competitors.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <div className={f.field}>

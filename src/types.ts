@@ -157,3 +157,38 @@ export interface Competitor {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ContractStatus = 'active' | 'completed' | 'cancelled';
+
+export interface Contract {
+  id: string;
+  title: string;
+  contractNo?: string;
+  client: string;
+  amount?: number;
+  contractDate?: string;
+  status: ContractStatus;
+  // 연결
+  leadId?: string;
+  bidId?: string;
+  projectId?: string;
+  // 납품 일정
+  midDeliveryDate?: string;
+  midDeliveryDone: boolean;
+  finalDeliveryDate?: string;
+  finalDeliveryDone: boolean;
+  // 대금 수금
+  depositRate: number;
+  depositPaid: boolean;
+  depositDate?: string;
+  midPaymentRate: number;
+  midPaymentPaid: boolean;
+  midPaymentDate?: string;
+  balanceRate: number;
+  balancePaid: boolean;
+  balanceDate?: string;
+  // 기타
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}

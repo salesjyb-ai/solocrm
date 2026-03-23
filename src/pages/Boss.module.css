@@ -77,3 +77,42 @@
   border-color: #4a4840;
   color: #d0cdc5;
 }
+
+/* 섹션 드래그 타겟 */
+.sections { display: flex; flex-direction: column; gap: 16px; }
+.sectionDragOver { border-color: var(--accent) !important; background: var(--accent-light); }
+
+/* 아이템 행 */
+.itemRow { display: flex; align-items: flex-start; gap: 8px; }
+.dragHandle { color: var(--text-muted); cursor: grab; padding: 2px; flex-shrink: 0; margin-top: 2px; opacity: 0; transition: opacity var(--transition); }
+.item:hover .dragHandle { opacity: 1; }
+.dragHandle:active { cursor: grabbing; }
+
+/* 이동 버튼 */
+.itemActions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; opacity: 0; transition: opacity var(--transition); }
+.item:hover .itemActions { opacity: 1; }
+.moveBtn { display: flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; cursor: pointer; white-space: nowrap; transition: opacity var(--transition); }
+.moveBtn:hover { opacity: 0.75; }
+.editBtn { color: var(--text-muted); display: flex; align-items: center; padding: 4px; border-radius: 3px; cursor: pointer; }
+.editBtn:hover { color: var(--accent); background: var(--accent-light); }
+
+/* 드롭 힌트 */
+.dropHint { color: var(--accent); font-size: 12px; font-style: normal; }
+
+/* 하위탭 패널 */
+.subPanel { margin: 8px 0 4px 52px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); border-left: 2px solid var(--border); }
+.subItem { display: flex; align-items: center; gap: 8px; }
+.subDone .subTitle { text-decoration: line-through; color: var(--text-muted); }
+.subCheck { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all var(--transition); color: transparent; }
+.subCheck:hover { border-color: var(--accent); }
+.subChecked { background: var(--accent); border-color: var(--accent); color: #fff; }
+.subTitle { flex: 1; font-size: 12.5px; color: var(--text-primary); }
+.subDeleteBtn { color: var(--text-muted); display: flex; align-items: center; opacity: 0; transition: opacity var(--transition); cursor: pointer; }
+.subItem:hover .subDeleteBtn { opacity: 1; }
+.subDeleteBtn:hover { color: var(--status-lost); }
+.subInputRow { display: flex; gap: 6px; margin-top: 4px; }
+.subInput { flex: 1; font-size: 12.5px; padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); outline: none; }
+.subInput:focus { border-color: var(--accent); }
+.subAddBtn { font-size: 11px; padding: 4px 10px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; }
+.subAddBtn:hover { opacity: 0.85; }
+.subCount { font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 1px 6px; border-radius: 10px; font-weight: 600; }

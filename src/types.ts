@@ -100,6 +100,12 @@ export interface Activity {
 
 export type BossItemType = 'question' | 'task' | 'memo';
 
+export interface BossSubItem {
+  id: string;
+  title: string;
+  done: boolean;
+}
+
 export interface BossItem {
   id: string;
   type: BossItemType;
@@ -109,6 +115,7 @@ export interface BossItem {
   dueDate?: string;
   done: boolean;
   projectId?: string;
+  subItems: BossSubItem[];
   createdAt: string;
 }
 

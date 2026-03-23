@@ -130,7 +130,9 @@ function rowToBoss(r: Record<string, unknown>): BossItem {
     id: r.id as string, type: r.type as BossItem['type'], title: r.title as string,
     content: r.content as string | undefined, priority: r.priority as BossItem['priority'],
     dueDate: r.due_date as string | undefined, done: r.done as boolean,
-    projectId: r.project_id as string | undefined, createdAt: r.created_at as string,
+    projectId: r.project_id as string | undefined,
+    subItems: (r.sub_items as BossItem['subItems']) || [],
+    createdAt: r.created_at as string,
   };
 }
 
@@ -265,18 +267,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addBossItem = async (item: Omit<BossItem, 'id' | 'createdAt'>) => {
-    const { data, error } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId }).select().single();
+    const { data, error } = await supabase.from('crm_boss_items').insert({ type: item.type, title: item.title, content: item.content, priority: item.priority, due_date: item.dueDate, done: item.done, project_id: item.projectId, sub_items: item.subItems || [] }).select().single();
     if (error) { showToast('항목 추가에 실패했습니다.', 'error'); return; }
     if (data) setBossItems(prev => [rowToBoss(data as Record<string, unknown>), ...prev]);
   };
   const updateBossItem = async (id: string, fields: Partial<BossItem>) => {
     const dbFields: Record<string, unknown> = {};
+    if (fields.type !== undefined) dbFields.type = fields.type;
     if (fields.title !== undefined) dbFields.title = fields.title;
     if (fields.content !== undefined) dbFields.content = fields.content;
     if (fields.priority !== undefined) dbFields.priority = fields.priority;
     if (fields.dueDate !== undefined) dbFields.due_date = fields.dueDate;
     if (fields.done !== undefined) dbFields.done = fields.done;
     if (fields.projectId !== undefined) dbFields.project_id = fields.projectId;
+    if (fields.subItems !== undefined) dbFields.sub_items = fields.subItems;
     const { data } = await supabase.from('crm_boss_items').update(dbFields).eq('id', id).select().single();
     if (data) setBossItems(prev => prev.map(b => b.id === id ? rowToBoss(data as Record<string, unknown>) : b));
   };
@@ -329,7 +333,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           endDate: r.end_date as string | undefined, utilization: r.utilization as number,
           notes: r.notes as string | undefined, createdAt: r.created_at as string,
         })));
-        setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+        setBossItems((bossRes.data || []).map(r => rowToBoss(r as Record<string, unknown>)));
         setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
         setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
         setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
@@ -448,7 +452,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           endDate: r.end_date as string | undefined, utilization: r.utilization as number,
           notes: r.notes as string | undefined, createdAt: r.created_at as string,
         })));
-        setBossItems((bossRes.data || []).map(r => ({ id: r.id as string, type: r.type as BossItem['type'], title: r.title as string, content: r.content as string | undefined, priority: r.priority as BossItem['priority'], dueDate: r.due_date as string | undefined, done: r.done as boolean, projectId: r.project_id as string | undefined, createdAt: r.created_at as string })));
+        setBossItems((bossRes.data || []).map(r => rowToBoss(r as Record<string, unknown>)));
         setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
         setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
         setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));

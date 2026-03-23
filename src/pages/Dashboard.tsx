@@ -200,8 +200,8 @@ export default function Dashboard() {
                 <div className={styles.dealLeft}>
                   <div className={styles.dealAvatar}>{lead.company[0]}</div>
                   <div className={styles.dealInfo}>
-                    <span className={styles.dealName}>{lead.name}</span>
-                    <span className={styles.dealCompany}>{lead.dealName || lead.company}</span>
+                    <span className={styles.dealName}>{lead.dealName || lead.company}</span>
+                    <span className={styles.dealCompany}>{lead.company} · {lead.name}</span>
                   </div>
                 </div>
                 <div className={styles.dealRight}>

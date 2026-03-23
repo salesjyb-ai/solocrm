@@ -21,7 +21,7 @@ export default function Leads() {
   const [form, setForm] = useState({ name: '', company: '', dealName: '', contact: '', phone: '', value: '', status: 'new' as LeadStatus, nextAction: '', nextActionDate: '' });
 
   const filtered = leads.filter(l => {
-    const matchSearch = l.name.includes(search.trim()) || l.company.includes(search.trim());
+    const matchSearch = l.name.includes(search.trim()) || l.company.includes(search.trim()) || (l.dealName || '').includes(search.trim());
     const matchStatus = filterStatus === 'all' || l.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -92,9 +92,11 @@ export default function Leads() {
                   <div className={styles.nameCell} onClick={() => navigate(`/leads/${lead.id}`)} style={{cursor:"pointer"}}>
                     <div className={styles.avatar}>{lead.company[0]}</div>
                     <div>
-                      <div className={styles.name}>{lead.name}</div>
-                      <div className={styles.company}>{lead.company}</div>
-                      {lead.dealName && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 2 }}>📋 {lead.dealName}</div>}
+                      {lead.dealName
+                        ? <div className={styles.name}>{lead.dealName}</div>
+                        : <div className={styles.name}>{lead.company}</div>
+                      }
+                      <div className={styles.company}>{lead.company} · {lead.name}</div>
                     </div>
                   </div>
                 </td>

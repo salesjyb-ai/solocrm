@@ -124,9 +124,8 @@ export default function LeadDetail() {
             <div className={styles.cardHeader}>
               <div className={styles.avatar}>{lead.company[0]}</div>
               <div>
-                <h2 className={styles.leadName}>{lead.name}</h2>
-                <p className={styles.leadCompany}>{lead.company}</p>
-                {lead.dealName && <p style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>📋 {lead.dealName}</p>}
+                <h2 className={styles.leadName}>{lead.dealName || lead.company}</h2>
+                <p className={styles.leadCompany}>{lead.company} · {lead.name}</p>
               </div>
               <div className={styles.statusWrap}>
                 <LeadStatusSelect value={lead.status} onChange={handleStatusChange} />

@@ -81,3 +81,14 @@
 .notesText { font-size: 13px; color: var(--text-secondary); white-space: pre-wrap; line-height: 1.6; margin: 0; }
 
 @media (max-width: 768px) { .detailGrid { grid-template-columns: 1fr; } .headerMeta { display: none; } }
+
+/* 섹션별 드래그 뷰 */
+.sectionList { display: flex; flex-direction: column; gap: 20px; }
+.statusSection { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color var(--transition); }
+.statusDragOver { border-color: var(--accent) !important; background: var(--accent-light); }
+.statusSectionHeader { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border-subtle); }
+.statusSectionDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.statusSectionTitle { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-secondary); }
+.statusSectionCount { font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 1px 6px; border-radius: 10px; }
+.dropHint { font-size: 12px; color: var(--accent); font-style: italic; margin-left: 4px; }
+.sectionEmpty { font-size: 12.5px; color: var(--text-muted); text-align: center; padding: 16px; font-style: italic; margin: 0; }

@@ -86,3 +86,30 @@
   border-color: #4a4840;
   color: #d0cdc5;
 }
+
+/* ── 칸반 보드 ── */
+.kanbanBoard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; align-items: start; }
+.kanbanCol { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color var(--transition); min-height: 120px; }
+.kanbanCol:hover { border-color: var(--accent-muted); }
+.kanbanDragOver { border-color: var(--accent) !important; background: var(--accent-light); }
+.kanbanColHeader { padding: 10px 12px 8px; border-top: 3px solid; display: flex; align-items: center; gap: 6px; }
+.kanbanColTitle { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+.kanbanColCount { font-size: 11px; background: var(--bg-secondary); color: var(--text-muted); padding: 1px 6px; border-radius: 10px; font-weight: 600; }
+.kanbanColValue { font-size: 10.5px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-left: auto; }
+.kanbanCards { padding: 6px 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.kanbanEmpty { font-size: 12px; color: var(--text-muted); text-align: center; padding: 16px 8px; font-style: italic; }
+.kanbanCard { background: var(--bg); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 10px 8px; cursor: grab; transition: box-shadow var(--transition), border-color var(--transition); }
+.kanbanCard:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-color: var(--border); }
+.kanbanCard:active { cursor: grabbing; }
+.kanbanCardTop { display: flex; align-items: flex-start; gap: 6px; }
+.kanbanGrip { color: var(--text-muted); flex-shrink: 0; margin-top: 1px; opacity: 0.4; }
+.kanbanCard:hover .kanbanGrip { opacity: 1; }
+.kanbanCardBody { flex: 1; min-width: 0; cursor: pointer; }
+.kanbanCardBody:hover .kanbanCardName { color: var(--accent); }
+.kanbanCardName { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kanbanCardSub { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kanbanDeleteBtn { color: var(--text-muted); opacity: 0; display: flex; align-items: center; flex-shrink: 0; padding: 2px; border-radius: 3px; cursor: pointer; transition: all var(--transition); }
+.kanbanCard:hover .kanbanDeleteBtn { opacity: 1; }
+.kanbanDeleteBtn:hover { color: var(--status-lost); background: var(--status-lost-bg); }
+.kanbanCardValue { font-size: 11.5px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-top: 6px; padding-left: 19px; }
+.kanbanCardAction { font-size: 11px; color: var(--text-muted); margin-top: 4px; padding-left: 19px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

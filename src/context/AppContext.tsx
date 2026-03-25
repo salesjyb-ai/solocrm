@@ -35,6 +35,7 @@ interface AppContextType {
   toggleTask: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   updateTaskSubtasks: (id: string, subtasks: Subtask[]) => Promise<void>;
+  updateTaskDate: (id: string, dueDate: string) => Promise<void>;
   addTask: (task: Omit<Task, 'id'>) => Promise<void>;
   addActivity: (leadId: string, type: ActivityType, content: string) => Promise<void>;
   getLeadActivities: (leadId: string) => Activity[];
@@ -592,6 +593,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (data) setTasks(prev => [...prev, rowToTask(data as Record<string, unknown>)]);
   };
 
+  const updateTaskDate = async (id: string, dueDate: string) => {
+    const { data } = await supabase.from('crm_tasks').update({ due_date: dueDate }).eq('id', id).select().single();
+    if (data) setTasks(prev => prev.map(t => t.id === id ? rowToTask(data as Record<string, unknown>) : t));
+  };
+
   const addActivity = async (leadId: string, type: ActivityType, content: string) => {
     const { data } = await supabase.from('crm_activities').insert({ lead_id: leadId, type, content }).select().single();
     if (data) setActivities(prev => [rowToActivity(data as Record<string, unknown>), ...prev]);
@@ -760,7 +766,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats, contracts, addContract, updateContract, deleteContract, competitors, addCompetitor, updateCompetitor, deleteCompetitor, addCompetitorBid, deleteCompetitorBid }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskDate, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats, contracts, addContract, updateContract, deleteContract, competitors, addCompetitor, updateCompetitor, deleteCompetitor, addCompetitorBid, deleteCompetitorBid }}>
       {children}
     </AppContext.Provider>
   );

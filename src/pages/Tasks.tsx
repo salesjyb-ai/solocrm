@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Check, Download, ChevronDown, ChevronRight, AlertCircle, Calendar, Trash2, X, Pencil, GripVertical } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
 import type { Task, Subtask } from '../types';
@@ -9,6 +9,11 @@ import styles from './Tasks.module.css';
 
 type ViewMode = 'date' | 'all';
 type TabFilter = 'today' | 'upcoming' | 'all';
+
+// drag payload: task 드래그 or subtask 드래그 구분
+type DragPayload =
+  | { kind: 'task'; taskId: string; fromDate: string }
+  | { kind: 'subtask'; taskId: string; subtaskId: string };
 
 function getKSTToday() {
   return new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -27,54 +32,34 @@ function formatDateLabel(dateStr: string, today: string) {
   return { label: `${mmdd} (${weekday})`, tag: '', tagType: 'normal' };
 }
 
-// 미니 캘린더 컴포넌트
 function MiniCalendar({ tasks, onSelectDate, onClose }: { tasks: Task[]; onSelectDate: (date: string) => void; onClose: () => void }) {
   const today = getKSTToday();
   const [viewDate, setViewDate] = useState(() => new Date(today + 'T00:00:00'));
-
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-  // 이 달에 할 일 있는 날짜 set
-  const taskDates = new Set(
-    tasks.filter(t => {
-      if (!t.dueDate) return false;
-      const d = new Date(t.dueDate + 'T00:00:00');
-      return d.getFullYear() === year && d.getMonth() === month;
-    }).map(t => t.dueDate)
-  );
-
+  const taskDates = new Set(tasks.filter(t => { if (!t.dueDate) return false; const d = new Date(t.dueDate + 'T00:00:00'); return d.getFullYear() === year && d.getMonth() === month; }).map(t => t.dueDate));
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let i = 1; i <= daysInMonth; i++) cells.push(i);
-
-  const prevMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
-  const nextMonth = () => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
-
   return (
     <div className={styles.calendarPopup}>
       <div className={styles.calNavRow}>
-        <button onClick={prevMonth} className={styles.calNavBtn}>‹</button>
+        <button onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1))} className={styles.calNavBtn}>‹</button>
         <span className={styles.calMonthLabel}>{year}년 {month + 1}월</span>
-        <button onClick={nextMonth} className={styles.calNavBtn}>›</button>
+        <button onClick={() => setViewDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1))} className={styles.calNavBtn}>›</button>
         <button onClick={onClose} className={styles.calCloseBtn}><X size={14} /></button>
       </div>
       <div className={styles.calGrid}>
-        {['일','월','화','수','목','금','토'].map(d => (
-          <div key={d} className={styles.calWeekday}>{d}</div>
-        ))}
+        {['일','월','화','수','목','금','토'].map(d => <div key={d} className={styles.calWeekday}>{d}</div>)}
         {cells.map((day, i) => {
           if (!day) return <div key={`empty-${i}`} />;
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const isToday = dateStr === today;
-          const hasTasks = taskDates.has(dateStr);
           return (
-            <button key={dateStr} className={`${styles.calDay} ${isToday ? styles.calToday : ''} ${hasTasks ? styles.calHasTasks : ''}`}
+            <button key={dateStr} className={`${styles.calDay} ${dateStr === today ? styles.calToday : ''} ${taskDates.has(dateStr) ? styles.calHasTasks : ''}`}
               onClick={() => { onSelectDate(dateStr); onClose(); }}>
-              {day}
-              {hasTasks && <span className={styles.calDot} />}
+              {day}{taskDates.has(dateStr) && <span className={styles.calDot} />}
             </button>
           );
         })}
@@ -84,7 +69,7 @@ function MiniCalendar({ tasks, onSelectDate, onClose }: { tasks: Task[]; onSelec
 }
 
 export default function Tasks() {
-  const { tasks, toggleTask, deleteTask, addTask, updateTaskSubtasks, leads, projects } = useApp();
+  const { tasks, toggleTask, deleteTask, addTask, updateTaskDate, updateTaskSubtasks, leads, projects } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalDate, setModalDate] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('date');
@@ -95,18 +80,15 @@ export default function Tasks() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', dueDate: '', linkedType: '' as '' | 'lead' | 'project', linkedId: '' });
+  const [drag, setDrag] = useState<DragPayload | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null); // subtask 드롭 대상
   const dateRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const today = getKSTToday();
   const weekLater = new Date(new Date().getTime() + 9 * 60 * 60 * 1000 + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-  // 달력에서 날짜 선택 시 해당 날짜만 필터링
-  const handleCalendarSelect = (date: string) => {
-    setSelectedDate(date);
-    setTabFilter('all');
-    setShowDone(true);
-  };
-
+  const handleCalendarSelect = (date: string) => { setSelectedDate(date); setTabFilter('all'); setShowDone(true); };
   const clearDateFilter = () => setSelectedDate(null);
 
   const filteredTasks = useMemo(() => {
@@ -131,13 +113,7 @@ export default function Tasks() {
   }, [filteredTasks]);
 
   const toggleCollapse = (key: string) => setCollapsed(p => ({ ...p, [key]: !p[key] }));
-
-  const openModal = (date = '') => {
-    setModalDate(date);
-    setForm({ title: '', dueDate: date, linkedType: '', linkedId: '' });
-    setModalOpen(true);
-  };
-
+  const openModal = (date = '') => { setModalDate(date); setForm({ title: '', dueDate: date, linkedType: '', linkedId: '' }); setModalOpen(true); };
   const handleModalAdd = async () => {
     if (!form.title.trim()) return;
     const linkedTo = form.linkedType && form.linkedId ? (() => {
@@ -148,12 +124,38 @@ export default function Tasks() {
     setModalOpen(false);
     setForm({ title: '', dueDate: '', linkedType: '', linkedId: '' });
   };
-
   const handleInlineAdd = async (date: string) => {
     const title = (inlineInputs[date] || '').trim();
     if (!title) return;
     await addTask({ title, done: false, dueDate: date, linkedTo: undefined, subtasks: [] });
     setInlineInputs(p => ({ ...p, [date]: '' }));
+  };
+
+  // 드래그 앤 드롭: 날짜 그룹 간 task 이동
+  const handleDateDrop = (toDate: string) => {
+    if (!drag) return;
+    if (drag.kind === 'task' && drag.fromDate !== toDate) {
+      updateTaskDate(drag.taskId, toDate);
+    }
+    if (drag.kind === 'subtask') {
+      // 날짜 그룹에 드롭 시 무시 (task에만 드롭)
+    }
+    setDrag(null);
+    setDragOverDate(null);
+  };
+
+  // 드래그 앤 드롭: subtask → 다른 task로 이동
+  const handleTaskDrop = (toTaskId: string) => {
+    if (!drag || drag.kind !== 'subtask') return;
+    const fromTask = tasks.find(t => t.id === drag.taskId);
+    const toTask = tasks.find(t => t.id === toTaskId);
+    if (!fromTask || !toTask || drag.taskId === toTaskId) return;
+    const sub = fromTask.subtasks.find(s => s.id === drag.subtaskId);
+    if (!sub) return;
+    updateTaskSubtasks(drag.taskId, fromTask.subtasks.filter(s => s.id !== drag.subtaskId));
+    updateTaskSubtasks(toTaskId, [...(toTask.subtasks || []), sub]);
+    setDrag(null);
+    setDragOverTaskId(null);
   };
 
   const pendingCount = tasks.filter(t => !t.done).length;
@@ -164,8 +166,14 @@ export default function Tasks() {
     const { label, tag, tagType } = formatDateLabel(date, today);
     const isOpen = collapsed[date] !== true;
     const items = grouped.map[date];
+    const isDragTarget = dragOverDate === date && drag?.kind === 'task';
     return (
-      <div key={date} className={styles.dateGroup} ref={el => { dateRefs.current[date] = el; }}>
+      <div key={date} className={`${styles.dateGroup} ${isDragTarget ? styles.dateGroupDragOver : ''}`}
+        ref={el => { dateRefs.current[date] = el; }}
+        onDragOver={e => { e.preventDefault(); if (drag?.kind === 'task') setDragOverDate(date); }}
+        onDrop={() => handleDateDrop(date)}
+        onDragLeave={() => setDragOverDate(null)}
+      >
         <div className={styles.dateHeader}>
           <button className={styles.dateToggle} onClick={() => toggleCollapse(date)}>
             {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -173,17 +181,23 @@ export default function Tasks() {
           <span className={styles.dateLabel}>{label}</span>
           {tag && <span className={`${styles.dateTag} ${styles[`tag_${tagType}`]}`}>{tag}</span>}
           <span className={styles.dateCount}>{items.filter(t => !t.done).length}개</span>
-          <button className={styles.dateAddBtn} onClick={() => openModal(date)} title="이 날짜에 추가">
-            <Plus size={13} />
-          </button>
+          <button className={styles.dateAddBtn} onClick={() => openModal(date)} title="이 날짜에 추가"><Plus size={13} /></button>
         </div>
         {isOpen && (
           <div className={styles.dateItems}>
             {items.map(task => (
               <TaskRow key={task.id} task={task} today={today}
+                isDragTarget={dragOverTaskId === task.id && drag?.kind === 'subtask'}
                 onToggle={() => toggleTask(task.id)}
                 onDelete={() => deleteTask(task.id)}
                 onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
+                onDragStart={() => setDrag({ kind: 'task', taskId: task.id, fromDate: date })}
+                onDragEnd={() => { setDrag(null); setDragOverDate(null); }}
+                onSubtaskDragStart={(subtaskId) => setDrag({ kind: 'subtask', taskId: task.id, subtaskId })}
+                onSubtaskDragEnd={() => { setDrag(null); setDragOverTaskId(null); }}
+                onSubtaskDragOver={() => { if (drag?.kind === 'subtask') setDragOverTaskId(task.id); }}
+                onSubtaskDrop={() => handleTaskDrop(task.id)}
+                onSubtaskDragLeave={() => setDragOverTaskId(null)}
               />
             ))}
             <div className={styles.inlineAdd}>
@@ -209,14 +223,11 @@ export default function Tasks() {
           <p className={styles.subtitle}>{pendingCount}개 남음 · {doneCount}개 완료</p>
         </div>
         <div className={styles.headerRight}>
-          {/* 캘린더 버튼 */}
           <div className={styles.calendarWrap}>
             <button className={`${styles.calBtn} ${showCalendar ? styles.calBtnActive : ''}`} onClick={() => setShowCalendar(p => !p)}>
               <Calendar size={14} /> 날짜 이동
             </button>
-            {showCalendar && (
-              <MiniCalendar tasks={tasks} onSelectDate={handleCalendarSelect} onClose={() => setShowCalendar(false)} />
-            )}
+            {showCalendar && <MiniCalendar tasks={tasks} onSelectDate={handleCalendarSelect} onClose={() => setShowCalendar(false)} />}
           </div>
           <div className={styles.viewToggle}>
             <button className={`${styles.viewBtn} ${viewMode === 'date' ? styles.viewBtnActive : ''}`} onClick={() => setViewMode('date')}>날짜별</button>
@@ -227,7 +238,6 @@ export default function Tasks() {
         </div>
       </div>
 
-      {/* 날짜 필터 활성 시 배너 */}
       {selectedDate && (
         <div className={styles.dateFilterBanner}>
           <Calendar size={13} />
@@ -236,26 +246,20 @@ export default function Tasks() {
         </div>
       )}
 
-      {/* 탭 (날짜 필터 없을 때만) */}
       {!selectedDate && (
         <div className={styles.tabs}>
-          <button className={`${styles.tab} ${tabFilter === 'today' ? styles.tabActive : ''}`} onClick={() => setTabFilter('today')}>
-            오늘 <span className={styles.tabBadge}>{todayCount}</span>
-          </button>
+          <button className={`${styles.tab} ${tabFilter === 'today' ? styles.tabActive : ''}`} onClick={() => setTabFilter('today')}>오늘 <span className={styles.tabBadge}>{todayCount}</span></button>
           <button className={`${styles.tab} ${tabFilter === 'upcoming' ? styles.tabActive : ''}`} onClick={() => setTabFilter('upcoming')}>이번 주</button>
           <button className={`${styles.tab} ${tabFilter === 'all' ? styles.tabActive : ''}`} onClick={() => setTabFilter('all')}>전체</button>
           <label className={styles.doneToggle}>
-            <input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} />
-            완료 항목 보기
+            <input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} /> 완료 항목 보기
           </label>
         </div>
       )}
 
       {viewMode === 'date' ? (
         <div className={styles.dateGroups}>
-          {grouped.sortedDates.length === 0 && grouped.noDate.length === 0 && (
-            <div className={styles.emptyState}>할 일이 없습니다 🎉</div>
-          )}
+          {grouped.sortedDates.length === 0 && grouped.noDate.length === 0 && <div className={styles.emptyState}>할 일이 없습니다 🎉</div>}
           {grouped.sortedDates.filter(d => d < today).map(renderDateGroup)}
           {grouped.sortedDates.filter(d => d >= today).map(renderDateGroup)}
           {grouped.noDate.length > 0 && (
@@ -271,9 +275,17 @@ export default function Tasks() {
                 <div className={styles.dateItems}>
                   {grouped.noDate.map(task => (
                     <TaskRow key={task.id} task={task} today={today}
+                      isDragTarget={dragOverTaskId === task.id && drag?.kind === 'subtask'}
                       onToggle={() => toggleTask(task.id)}
                       onDelete={() => deleteTask(task.id)}
                       onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
+                      onDragStart={() => setDrag({ kind: 'task', taskId: task.id, fromDate: '' })}
+                      onDragEnd={() => { setDrag(null); setDragOverDate(null); }}
+                      onSubtaskDragStart={(subtaskId) => setDrag({ kind: 'subtask', taskId: task.id, subtaskId })}
+                      onSubtaskDragEnd={() => { setDrag(null); setDragOverTaskId(null); }}
+                      onSubtaskDragOver={() => { if (drag?.kind === 'subtask') setDragOverTaskId(task.id); }}
+                      onSubtaskDrop={() => handleTaskDrop(task.id)}
+                      onSubtaskDragLeave={() => setDragOverTaskId(null)}
                     />
                   ))}
                 </div>
@@ -286,9 +298,17 @@ export default function Tasks() {
           {filteredTasks.length === 0 && <div className={styles.emptyState}>할 일이 없습니다 🎉</div>}
           {filteredTasks.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '')).map(task => (
             <TaskRow key={task.id} task={task} today={today}
+              isDragTarget={false}
               onToggle={() => toggleTask(task.id)}
               onDelete={() => deleteTask(task.id)}
               onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
+              onDragStart={() => {}}
+              onDragEnd={() => {}}
+              onSubtaskDragStart={() => {}}
+              onSubtaskDragEnd={() => {}}
+              onSubtaskDragOver={() => {}}
+              onSubtaskDrop={() => {}}
+              onSubtaskDragLeave={() => {}}
             />
           ))}
         </div>
@@ -299,17 +319,17 @@ export default function Tasks() {
           <div className={f.field}>
             <label className={f.label}>내용 *</label>
             <input className={f.input} placeholder="예: 제안서 검토 후 발송" value={form.title}
-              onChange={e => setForm(p => ({...p, title: e.target.value}))}
+              onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
               onKeyDown={e => { if (e.key === 'Enter') handleModalAdd(); }} autoFocus />
           </div>
           <div className={f.field}>
             <label className={f.label}>날짜</label>
-            <input className={f.input} type="date" value={form.dueDate} onChange={e => setForm(p => ({...p, dueDate: e.target.value}))} />
+            <input className={f.input} type="date" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} />
           </div>
           <div className={f.row}>
             <div className={f.field}>
               <label className={f.label}>연결 대상</label>
-              <select className={f.select} value={form.linkedType} onChange={e => setForm(p => ({...p, linkedType: e.target.value as '' | 'lead' | 'project', linkedId: ''}))}>
+              <select className={f.select} value={form.linkedType} onChange={e => setForm(p => ({ ...p, linkedType: e.target.value as '' | 'lead' | 'project', linkedId: '' }))}>
                 <option value="">없음</option>
                 <option value="lead">리드</option>
                 <option value="project">프로젝트</option>
@@ -318,7 +338,7 @@ export default function Tasks() {
             {form.linkedType && (
               <div className={f.field}>
                 <label className={f.label}>{form.linkedType === 'lead' ? '리드' : '프로젝트'} 선택</label>
-                <select className={f.select} value={form.linkedId} onChange={e => setForm(p => ({...p, linkedId: e.target.value}))}>
+                <select className={f.select} value={form.linkedId} onChange={e => setForm(p => ({ ...p, linkedId: e.target.value }))}>
                   <option value="">선택...</option>
                   {form.linkedType === 'lead' ? leads.map(l => <option key={l.id} value={l.id}>{l.name} ({l.company})</option>) : projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
@@ -335,10 +355,16 @@ export default function Tasks() {
   );
 }
 
-function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
-  task: Task; today: string;
+function TaskRow({ task, today, isDragTarget, onToggle, onDelete, onUpdateSubtasks, onDragStart, onDragEnd, onSubtaskDragStart, onSubtaskDragEnd, onSubtaskDragOver, onSubtaskDrop, onSubtaskDragLeave }: {
+  task: Task; today: string; isDragTarget: boolean;
   onToggle: () => void; onDelete: () => void;
   onUpdateSubtasks: (subs: Subtask[]) => void;
+  onDragStart: () => void; onDragEnd: () => void;
+  onSubtaskDragStart: (subtaskId: string) => void;
+  onSubtaskDragEnd: () => void;
+  onSubtaskDragOver: () => void;
+  onSubtaskDrop: () => void;
+  onSubtaskDragLeave: () => void;
 }) {
   const overdue = !task.done && task.dueDate < today;
   const [expanded, setExpanded] = useState(false);
@@ -351,58 +377,37 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
   const addSubtask = () => {
     const title = newSubtask.trim();
     if (!title) return;
-    const updated = [...subtasks, { id: crypto.randomUUID(), title, done: false }];
-    onUpdateSubtasks(updated);
+    onUpdateSubtasks([...subtasks, { id: crypto.randomUUID(), title, done: false }]);
     setNewSubtask('');
   };
-
-  const toggleSubtask = (id: string) => {
-    onUpdateSubtasks(subtasks.map(s => s.id === id ? { ...s, done: !s.done } : s));
-  };
-
-  const deleteSubtask = (id: string) => {
-    onUpdateSubtasks(subtasks.filter(s => s.id !== id));
-  };
-
-  const startEditSubtask = (sub: Subtask) => {
-    setEditingSubId(sub.id);
-    setEditingSubVal(sub.title);
-  };
-
+  const toggleSubtask = (id: string) => onUpdateSubtasks(subtasks.map(s => s.id === id ? { ...s, done: !s.done } : s));
+  const deleteSubtask = (id: string) => onUpdateSubtasks(subtasks.filter(s => s.id !== id));
+  const startEditSubtask = (sub: Subtask) => { setEditingSubId(sub.id); setEditingSubVal(sub.title); };
   const saveEditSubtask = (id: string) => {
     const title = editingSubVal.trim();
     if (!title) return;
     onUpdateSubtasks(subtasks.map(s => s.id === id ? { ...s, title } : s));
-    setEditingSubId(null);
-    setEditingSubVal('');
-  };
-
-  const cancelEditSubtask = () => {
-    setEditingSubId(null);
-    setEditingSubVal('');
+    setEditingSubId(null); setEditingSubVal('');
   };
 
   return (
-    <div className={`${styles.taskWrap} ${task.done ? styles.done : ''}`}>
+    <div className={`${styles.taskWrap} ${task.done ? styles.done : ''} ${isDragTarget ? styles.taskDropTarget : ''}`}
+      draggable onDragStart={onDragStart} onDragEnd={onDragEnd}
+      onDragOver={e => { e.preventDefault(); e.stopPropagation(); onSubtaskDragOver(); }}
+      onDrop={e => { e.stopPropagation(); onSubtaskDrop(); }}
+      onDragLeave={onSubtaskDragLeave}
+    >
       <div className={`${styles.taskRow} ${overdue ? styles.overdue : ''}`}>
-        {/* 완료 버튼 (체크박스 → 별도 버튼으로 분리) */}
-        <button
-          className={`${styles.completeBtn} ${task.done ? styles.completeBtnDone : ''}`}
-          onClick={onToggle}
-          title={task.done ? '완료 취소' : '완료'}
-        >
+        <GripVertical size={13} className={styles.taskGrip} />
+        <button className={`${styles.completeBtn} ${task.done ? styles.completeBtnDone : ''}`} onClick={onToggle} title={task.done ? '완료 취소' : '완료'}>
           {task.done ? <Check size={11} strokeWidth={3} /> : <Check size={11} strokeWidth={2} />}
         </button>
-        {/* taskBody는 클릭해도 아무 동작 없음 */}
         <div className={styles.taskBody}>
           <span className={styles.taskTitle}>{task.title}</span>
-          {subtasks.length > 0 && (
-            <span className={styles.subCount}>{doneCount}/{subtasks.length}</span>
-          )}
+          {subtasks.length > 0 && <span className={styles.subCount}>{doneCount}/{subtasks.length}</span>}
           {task.linkedTo && <span className={styles.taskLink}>{task.linkedTo.type === 'lead' ? '🤝' : '📁'} {task.linkedTo.name}</span>}
         </div>
         {overdue && <AlertCircle size={13} className={styles.overdueIcon} />}
-        {/* 하위 업무 토글 */}
         <button className={styles.subToggleBtn} onClick={() => setExpanded(p => !p)} title="하위 업무">
           <Plus size={13} />
           {subtasks.length > 0 && (expanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />)}
@@ -412,55 +417,45 @@ function TaskRow({ task, today, onToggle, onDelete, onUpdateSubtasks }: {
         </button>
       </div>
 
-      {/* 하위 업무 패널 */}
+      {isDragTarget && (
+        <div className={styles.subtaskDropHint}>하위 업무를 여기에 드롭</div>
+      )}
+
       {expanded && (
         <div className={styles.subtaskPanel}>
           {subtasks.map(sub => (
-            <div key={sub.id} className={`${styles.subtaskRow} ${sub.done ? styles.subDone : ''}`}>
-              {/* 하위 업무 완료 버튼 */}
-              <button
-                className={`${styles.subCompleteBtn} ${sub.done ? styles.subCompleteBtnDone : ''}`}
-                onClick={() => toggleSubtask(sub.id)}
-                title={sub.done ? '완료 취소' : '완료'}
-              >
+            <div key={sub.id} className={`${styles.subtaskRow} ${sub.done ? styles.subDone : ''}`}
+              draggable
+              onDragStart={e => { e.stopPropagation(); onSubtaskDragStart(sub.id); }}
+              onDragEnd={e => { e.stopPropagation(); onSubtaskDragEnd(); }}
+            >
+              <GripVertical size={11} className={styles.subGrip} />
+              <button className={`${styles.subCompleteBtn} ${sub.done ? styles.subCompleteBtnDone : ''}`} onClick={() => toggleSubtask(sub.id)}>
                 {sub.done && <Check size={9} strokeWidth={3} />}
               </button>
-              {/* 하위 업무 제목 - 편집 모드 */}
               {editingSubId === sub.id ? (
-                <input
-                  className={styles.subEditInput}
-                  value={editingSubVal}
+                <input className={styles.subEditInput} value={editingSubVal}
                   onChange={e => setEditingSubVal(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') saveEditSubtask(sub.id);
-                    if (e.key === 'Escape') cancelEditSubtask();
-                  }}
-                  autoFocus
-                />
+                  onKeyDown={e => { if (e.key === 'Enter') saveEditSubtask(sub.id); if (e.key === 'Escape') { setEditingSubId(null); } }}
+                  autoFocus />
               ) : (
                 <span className={styles.subTitle}>{sub.title}</span>
               )}
-              {/* 편집 중일 때 저장/취소 / 아닐 때 수정+삭제 버튼 */}
               {editingSubId === sub.id ? (
                 <div className={styles.subEditActions}>
                   <button className={styles.subSaveBtn} onClick={() => saveEditSubtask(sub.id)}>저장</button>
-                  <button className={styles.subCancelBtn} onClick={cancelEditSubtask}><X size={11} /></button>
+                  <button className={styles.subCancelBtn} onClick={() => setEditingSubId(null)}><X size={11} /></button>
                 </div>
               ) : (
                 <div className={styles.subActions}>
-                  {!sub.done && (
-                    <button className={styles.subEditBtn} onClick={() => startEditSubtask(sub)} title="수정">
-                      <Pencil size={11} />
-                    </button>
-                  )}
+                  {!sub.done && <button className={styles.subEditBtn} onClick={() => startEditSubtask(sub)} title="수정"><Pencil size={11} /></button>}
                   <button className={styles.subDeleteBtn} onClick={() => deleteSubtask(sub.id)} title="삭제"><X size={11} /></button>
                 </div>
               )}
             </div>
           ))}
           <div className={styles.subtaskInput}>
-            <input className={styles.subInput} placeholder="하위 업무 추가 (Enter)"
-              value={newSubtask}
+            <input className={styles.subInput} placeholder="하위 업무 추가 (Enter)" value={newSubtask}
               onChange={e => setNewSubtask(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') addSubtask(); }} />
             {newSubtask.trim() && <button className={styles.inlineSubmit} onClick={addSubtask}>추가</button>}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Edit2, Check, FileText, ChevronDown, ChevronRight, Link2, Calendar, Banknote } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, FileText, ChevronDown, ChevronRight, Link2, Calendar, Banknote, GripVertical } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
 import type { Contract, ContractStatus } from '../types';
@@ -38,6 +38,8 @@ export default function Contracts() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(INIT_FORM);
   const [filterStatus, setFilterStatus] = useState<ContractStatus | 'all'>('all');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<ContractStatus | null>(null);
 
   const toggle = (id: string) => setExpanded(p => p === id ? null : id);
 
@@ -80,17 +82,23 @@ export default function Contracts() {
 
   const toggleField = (id: string, field: keyof Contract, val: boolean) => updateContract(id, { [field]: val } as Partial<Contract>);
 
+  const handleDrop = (toStatus: ContractStatus) => {
+    if (dragId) {
+      const c = contracts.find(c => c.id === dragId);
+      if (c && c.status !== toStatus) updateContract(dragId, { status: toStatus });
+    }
+    setDragId(null); setDragOver(null);
+  };
+
+  const CONTRACT_STATUSES: ContractStatus[] = ['active', 'completed', 'cancelled'];
+  const grouped = CONTRACT_STATUSES.reduce((acc, s) => {
+    acc[s] = contracts.filter(c => c.status === s);
+    return acc;
+  }, {} as Record<ContractStatus, typeof contracts>);
+
   const filtered = contracts.filter(c => filterStatus === 'all' || c.status === filterStatus);
 
   // 수금 진행률 계산
-  const paymentProgress = (c: Contract) => {
-    let paid = 0;
-    if (c.depositPaid) paid += c.depositRate;
-    if (c.midPaymentPaid) paid += c.midPaymentRate;
-    if (c.balancePaid) paid += c.balanceRate;
-    return paid;
-  };
-
   // 통계
   const totalAmount = contracts.filter(c => c.status !== 'cancelled').reduce((s, c) => s + (c.amount || 0), 0);
   const paidAmount = contracts.filter(c => c.status !== 'cancelled').reduce((s, c) => {
@@ -128,137 +136,38 @@ export default function Contracts() {
         </div>
       )}
 
-      <div className={styles.list}>
-        {filtered.map(c => {
-          const isOpen = expanded === c.id;
-          const progress = paymentProgress(c);
-          const linkedLead = c.leadId ? leads.find(l => l.id === c.leadId) : null;
-          const linkedBid = c.bidId ? bids.find(b => b.id === c.bidId) : null;
-          const linkedProject = c.projectId ? projects.find(p => p.id === c.projectId) : null;
-
-          return (
-            <div key={c.id} className={`${styles.card} ${isOpen ? styles.cardOpen : ''}`}>
-              {/* 헤더 */}
-              <div className={styles.cardHeader}>
-                <div className={styles.headerLeft} onClick={() => toggle(c.id)}>
-                  <div className={styles.avatar}>{c.client[0]}</div>
-                  <div className={styles.nameBlock}>
-                    <span className={styles.contractTitle}>{c.title}</span>
-                    <span className={styles.clientName}>{c.client}{c.contractNo && <span className={styles.contractNo}> · {c.contractNo}</span>}</span>
-                  </div>
-                  <div className={styles.headerMeta}>
-                    {c.amount && <span className={styles.amount}>{formatKRW(c.amount)}원</span>}
-                    <span className={styles.statusChip} style={{ background: STATUS_COLOR[c.status].bg, color: STATUS_COLOR[c.status].color }}>
-                      {STATUS_LABEL[c.status]}
-                    </span>
-                    {/* 수금 진행 바 */}
-                    <div className={styles.progressWrap}>
-                      <div className={styles.progressBar}>
-                        <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-                      </div>
-                      <span className={styles.progressLabel}>{progress}%</span>
-                    </div>
-                  </div>
-                  {isOpen ? <ChevronDown size={16} className={styles.chevron} /> : <ChevronRight size={16} className={styles.chevron} />}
+      {/* 전체 보기 - 상태별 섹션 + 드래그 */}
+      {filterStatus === 'all' ? (
+        <div className={styles.sectionList}>
+          {(['active', 'completed', 'cancelled'] as ContractStatus[]).map(status => {
+            const items = grouped[status];
+            const isDragTarget = dragOver === status;
+            return (
+              <div key={status}
+                className={`${styles.statusSection} ${isDragTarget ? styles.statusDragOver : ''}`}
+                onDragOver={e => { e.preventDefault(); setDragOver(status); }}
+                onDrop={() => handleDrop(status)}
+                onDragLeave={() => setDragOver(null)}
+              >
+                <div className={styles.statusSectionHeader}>
+                  <span className={styles.statusSectionDot} style={{ background: STATUS_COLOR[status].color }} />
+                  <span className={styles.statusSectionTitle}>{STATUS_LABEL[status]}</span>
+                  <span className={styles.statusSectionCount}>{items.length}</span>
+                  {isDragTarget && items.length === 0 && <span className={styles.dropHint}>여기에 드롭</span>}
                 </div>
-                <div className={styles.headerActions}>
-                  <button onClick={() => openEdit(c)} title="수정"><Edit2 size={13} /></button>
-                  <button onClick={() => { if (confirm(`"${c.title}" 계약을 삭제할까요?`)) deleteContract(c.id); }} title="삭제"><Trash2 size={13} /></button>
+                <div className={styles.list}>
+                  {items.length === 0 && !isDragTarget && <p className={styles.sectionEmpty}>계약 없음</p>}
+                  {items.map(c => <ContractCard key={c.id} c={c} expanded={expanded} toggle={toggle} toggleField={toggleField} openEdit={openEdit} deleteContract={deleteContract} leads={leads} bids={bids} projects={projects} onDragStart={() => setDragId(c.id)} onDragEnd={() => { setDragId(null); setDragOver(null); }} isDragging={dragId === c.id} />)}
                 </div>
               </div>
-
-              {/* 상세 */}
-              {isOpen && (
-                <div className={styles.detail}>
-                  <div className={styles.detailGrid}>
-
-                    {/* 납품 일정 */}
-                    <section className={styles.section}>
-                      <div className={styles.sectionTitle}><Calendar size={13} /> 납품 일정</div>
-                      <div className={styles.deliveryList}>
-                        {c.midDeliveryDate ? (
-                          <div className={styles.deliveryItem}>
-                            <button
-                              className={`${styles.deliveryCheck} ${c.midDeliveryDone ? styles.deliveryChecked : ''}`}
-                              onClick={() => toggleField(c.id, 'midDeliveryDone', !c.midDeliveryDone)}
-                            >
-                              {c.midDeliveryDone && <Check size={10} strokeWidth={3} />}
-                            </button>
-                            <span className={`${styles.deliveryLabel} ${c.midDeliveryDone ? styles.done : ''}`}>중간 납품</span>
-                            <span className={styles.deliveryDate}>{c.midDeliveryDate}</span>
-                          </div>
-                        ) : null}
-                        {c.finalDeliveryDate ? (
-                          <div className={styles.deliveryItem}>
-                            <button
-                              className={`${styles.deliveryCheck} ${c.finalDeliveryDone ? styles.deliveryChecked : ''}`}
-                              onClick={() => toggleField(c.id, 'finalDeliveryDone', !c.finalDeliveryDone)}
-                            >
-                              {c.finalDeliveryDone && <Check size={10} strokeWidth={3} />}
-                            </button>
-                            <span className={`${styles.deliveryLabel} ${c.finalDeliveryDone ? styles.done : ''}`}>최종 납품</span>
-                            <span className={styles.deliveryDate}>{c.finalDeliveryDate}</span>
-                          </div>
-                        ) : null}
-                        {!c.midDeliveryDate && !c.finalDeliveryDate && (
-                          <span className={styles.emptyText}>납품 일정 미등록</span>
-                        )}
-                      </div>
-                    </section>
-
-                    {/* 대금 수금 */}
-                    <section className={styles.section}>
-                      <div className={styles.sectionTitle}><Banknote size={13} /> 대금 수금</div>
-                      <div className={styles.paymentList}>
-                        {[
-                          { label: '선금', rate: c.depositRate, paid: c.depositPaid, date: c.depositDate, paidField: 'depositPaid' as keyof Contract, dateField: 'depositDate' as keyof Contract },
-                          { label: '중도금', rate: c.midPaymentRate, paid: c.midPaymentPaid, date: c.midPaymentDate, paidField: 'midPaymentPaid' as keyof Contract, dateField: 'midPaymentDate' as keyof Contract },
-                          { label: '잔금', rate: c.balanceRate, paid: c.balancePaid, date: c.balanceDate, paidField: 'balancePaid' as keyof Contract, dateField: 'balanceDate' as keyof Contract },
-                        ].filter(p => p.rate > 0).map(p => (
-                          <div key={p.label} className={styles.paymentItem}>
-                            <button
-                              className={`${styles.payCheck} ${p.paid ? styles.payChecked : ''}`}
-                              onClick={() => toggleField(c.id, p.paidField, !p.paid)}
-                            >
-                              {p.paid && <Check size={10} strokeWidth={3} />}
-                            </button>
-                            <span className={`${styles.payLabel} ${p.paid ? styles.done : ''}`}>{p.label}</span>
-                            <span className={styles.payRate}>{p.rate}%</span>
-                            {c.amount && <span className={styles.payAmount}>{formatKRW(Math.round(c.amount * p.rate / 100))}원</span>}
-                            {p.date && <span className={styles.payDate}>{p.date}</span>}
-                            {p.paid && <span className={styles.paidBadge}>수금완료</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  </div>
-
-                  {/* 연결 정보 */}
-                  {(linkedLead || linkedBid || linkedProject) && (
-                    <section className={styles.linkSection}>
-                      <div className={styles.sectionTitle}><Link2 size={13} /> 연결</div>
-                      <div className={styles.linkList}>
-                        {linkedLead && <span className={styles.linkChip} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>🤝 {linkedLead.company}</span>}
-                        {linkedBid && <span className={styles.linkChip} style={{ background: 'var(--status-contact-bg)', color: 'var(--status-contact)' }}>⚖️ {linkedBid.title.slice(0, 20)}</span>}
-                        {linkedProject && <span className={styles.linkChip} style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderColor: linkedProject.color }}>📁 {linkedProject.name}</span>}
-                      </div>
-                    </section>
-                  )}
-
-                  {/* 메모 */}
-                  {c.notes && (
-                    <section className={styles.notesSection}>
-                      <div className={styles.sectionTitle}><FileText size={13} /> 메모</div>
-                      <p className={styles.notesText}>{c.notes}</p>
-                    </section>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+      ) : (
+      <div className={styles.list}>
+        {filtered.map(c => <ContractCard key={c.id} c={c} expanded={expanded} toggle={toggle} toggleField={toggleField} openEdit={openEdit} deleteContract={deleteContract} leads={leads} bids={bids} projects={projects} onDragStart={() => setDragId(c.id)} onDragEnd={() => { setDragId(null); setDragOver(null); }} isDragging={dragId === c.id} />)}
       </div>
-
+      )}
       {/* 추가/수정 모달 */}
       <Modal open={modalOpen} onClose={closeModal} title={editingId ? '계약 수정' : '계약 추가'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -371,6 +280,121 @@ export default function Contracts() {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function ContractCard({ c, expanded, toggle, toggleField, openEdit, deleteContract, leads, bids, projects, onDragStart, onDragEnd, isDragging }: {
+  c: Contract; expanded: string | null; toggle: (id: string) => void;
+  toggleField: (id: string, field: keyof Contract, val: boolean) => void;
+  openEdit: (c: Contract) => void; deleteContract: (id: string) => Promise<void>;
+  leads: ReturnType<typeof useApp>['leads']; bids: ReturnType<typeof useApp>['bids']; projects: ReturnType<typeof useApp>['projects'];
+  onDragStart: () => void; onDragEnd: () => void; isDragging: boolean;
+}) {
+  const isOpen = expanded === c.id;
+  let paid = 0;
+  if (c.depositPaid) paid += c.depositRate;
+  if (c.midPaymentPaid) paid += c.midPaymentRate;
+  if (c.balancePaid) paid += c.balanceRate;
+  const progress = paid;
+  const linkedLead = c.leadId ? leads.find(l => l.id === c.leadId) : null;
+  const linkedBid = c.bidId ? bids.find(b => b.id === c.bidId) : null;
+  const linkedProject = c.projectId ? projects.find(p => p.id === c.projectId) : null;
+
+  return (
+    <div className={`${styles.card} ${isOpen ? styles.cardOpen : ''}`}
+      draggable onDragStart={onDragStart} onDragEnd={onDragEnd}
+      style={{ opacity: isDragging ? 0.5 : 1 }}>
+      <div className={styles.cardHeader}>
+        <GripVertical size={13} style={{ color: 'var(--text-muted)', flexShrink: 0, opacity: 0.5, cursor: 'grab' }} />
+        <div className={styles.headerLeft} onClick={() => toggle(c.id)}>
+          <div className={styles.avatar}>{c.client[0]}</div>
+          <div className={styles.nameBlock}>
+            <span className={styles.contractTitle}>{c.title}</span>
+            <span className={styles.clientName}>{c.client}{c.contractNo && <span className={styles.contractNo}> · {c.contractNo}</span>}</span>
+          </div>
+          <div className={styles.headerMeta}>
+            {c.amount && <span className={styles.amount}>{formatKRW(c.amount)}원</span>}
+            <span className={styles.statusChip} style={{ background: STATUS_COLOR[c.status].bg, color: STATUS_COLOR[c.status].color }}>{STATUS_LABEL[c.status]}</span>
+            <div className={styles.progressWrap}>
+              <div className={styles.progressBar}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
+              <span className={styles.progressLabel}>{progress}%</span>
+            </div>
+          </div>
+          {isOpen ? <ChevronDown size={16} className={styles.chevron} /> : <ChevronRight size={16} className={styles.chevron} />}
+        </div>
+        <div className={styles.headerActions}>
+          <button onClick={() => openEdit(c)} title="수정"><Edit2 size={13} /></button>
+          <button onClick={() => { if (confirm(`"${c.title}" 계약을 삭제할까요?`)) deleteContract(c.id); }} title="삭제"><Trash2 size={13} /></button>
+        </div>
+      </div>
+      {isOpen && (
+        <div className={styles.detail}>
+          <div className={styles.detailGrid}>
+            <section className={styles.section}>
+              <div className={styles.sectionTitle}><Calendar size={13} /> 납품 일정</div>
+              <div className={styles.deliveryList}>
+                {c.midDeliveryDate ? (
+                  <div className={styles.deliveryItem}>
+                    <button className={`${styles.deliveryCheck} ${c.midDeliveryDone ? styles.deliveryChecked : ''}`} onClick={() => toggleField(c.id, 'midDeliveryDone', !c.midDeliveryDone)}>
+                      {c.midDeliveryDone && <Check size={10} strokeWidth={3} />}
+                    </button>
+                    <span className={`${styles.deliveryLabel} ${c.midDeliveryDone ? styles.done : ''}`}>중간 납품</span>
+                    <span className={styles.deliveryDate}>{c.midDeliveryDate}</span>
+                  </div>
+                ) : null}
+                {c.finalDeliveryDate ? (
+                  <div className={styles.deliveryItem}>
+                    <button className={`${styles.deliveryCheck} ${c.finalDeliveryDone ? styles.deliveryChecked : ''}`} onClick={() => toggleField(c.id, 'finalDeliveryDone', !c.finalDeliveryDone)}>
+                      {c.finalDeliveryDone && <Check size={10} strokeWidth={3} />}
+                    </button>
+                    <span className={`${styles.deliveryLabel} ${c.finalDeliveryDone ? styles.done : ''}`}>최종 납품</span>
+                    <span className={styles.deliveryDate}>{c.finalDeliveryDate}</span>
+                  </div>
+                ) : null}
+                {!c.midDeliveryDate && !c.finalDeliveryDate && <span className={styles.emptyText}>납품 일정 미등록</span>}
+              </div>
+            </section>
+            <section className={styles.section}>
+              <div className={styles.sectionTitle}><Banknote size={13} /> 대금 수금</div>
+              <div className={styles.paymentList}>
+                {[
+                  { label: '선금', rate: c.depositRate, paid: c.depositPaid, date: c.depositDate, paidField: 'depositPaid' as keyof Contract },
+                  { label: '중도금', rate: c.midPaymentRate, paid: c.midPaymentPaid, date: c.midPaymentDate, paidField: 'midPaymentPaid' as keyof Contract },
+                  { label: '잔금', rate: c.balanceRate, paid: c.balancePaid, date: c.balanceDate, paidField: 'balancePaid' as keyof Contract },
+                ].filter(p => p.rate > 0).map(p => (
+                  <div key={p.label} className={styles.paymentItem}>
+                    <button className={`${styles.payCheck} ${p.paid ? styles.payChecked : ''}`} onClick={() => toggleField(c.id, p.paidField, !p.paid)}>
+                      {p.paid && <Check size={10} strokeWidth={3} />}
+                    </button>
+                    <span className={`${styles.payLabel} ${p.paid ? styles.done : ''}`}>{p.label}</span>
+                    <span className={styles.payRate}>{p.rate}%</span>
+                    {c.amount && <span className={styles.payAmount}>{formatKRW(Math.round(c.amount * p.rate / 100))}원</span>}
+                    {p.date && <span className={styles.payDate}>{p.date}</span>}
+                    {p.paid && <span className={styles.paidBadge}>수금완료</span>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+          {(linkedLead || linkedBid || linkedProject) && (
+            <section className={styles.linkSection}>
+              <div className={styles.sectionTitle}><Link2 size={13} /> 연결</div>
+              <div className={styles.linkList}>
+                {linkedLead && <span className={styles.linkChip} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>🤝 {linkedLead.company}</span>}
+                {linkedBid && <span className={styles.linkChip} style={{ background: 'var(--status-contact-bg)', color: 'var(--status-contact)' }}>⚖️ {linkedBid.title.slice(0, 20)}</span>}
+                {linkedProject && <span className={styles.linkChip} style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderColor: linkedProject.color }}>📁 {linkedProject.name}</span>}
+              </div>
+            </section>
+          )}
+          {c.notes && (
+            <section className={styles.notesSection}>
+              <div className={styles.sectionTitle}><FileText size={13} /> 메모</div>
+              <p className={styles.notesText}>{c.notes}</p>
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 }

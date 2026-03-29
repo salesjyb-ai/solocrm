@@ -1,4 +1,4 @@
-import { CheckSquare, TrendingUp, FolderKanban, Plus, ExternalLink, AlertCircle, Trophy, Target, Gavel, Clock, CalendarCheck } from 'lucide-react';
+import { CheckSquare, TrendingUp, FolderKanban, Plus, ExternalLink, AlertCircle, Trophy, Target, Gavel, Clock, CalendarCheck, Check } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LeadStatusBadge } from '../components/StatusBadge';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,6 @@ import {
   CartesianGrid, Legend
 } from 'recharts';
 import styles from './Dashboard.module.css';
-
 
 function formatKRW(val: number) {
   if (val >= 100000000) return `${(val / 100000000).toFixed(1)}억`;
@@ -21,18 +20,15 @@ export default function Dashboard() {
   const today = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
   const week = new Date(new Date().getTime() + 9 * 60 * 60 * 1000 + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-  // 할일
   const todayTasks = tasks.filter(t => t.dueDate && t.dueDate <= today && !t.done);
   const pendingCount = tasks.filter(t => !t.done).length;
 
-  // 리드
   const activeLeads = leads.filter(l => l.status !== 'won' && l.status !== 'lost');
   const wonLeads = leads.filter(l => l.status === 'won');
   const totalPipelineValue = activeLeads.reduce((sum, l) => sum + l.value, 0);
   const wonValue = wonLeads.reduce((sum, l) => sum + l.value, 0);
   const winRate = leads.length > 0 ? Math.round((wonLeads.length / leads.length) * 100) : 0;
 
-  // 입찰
   const activeBids = bids.filter(b => b.status === 'preparing' || b.status === 'active');
   const urgentBids = bids.filter(b =>
     (b.status === 'preparing' || b.status === 'active') &&
@@ -41,10 +37,8 @@ export default function Dashboard() {
   const wonBids = bids.filter(b => b.status === 'won');
   const wonBidValue = wonBids.reduce((sum, b) => sum + (b.amount || 0), 0);
 
-  // 프로젝트
   const activeProjects = projects.filter(p => p.status === 'active');
 
-  // 월별 차트
   const monthlyData = (() => {
     const months: { month: string; label: string; won: number; pipeline: number }[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -52,12 +46,8 @@ export default function Dashboard() {
       d.setMonth(d.getMonth() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const label = `${d.getMonth() + 1}월`;
-      const wonAmt = leads
-        .filter(l => l.status === 'won' && l.updatedAt?.startsWith(key))
-        .reduce((s, l) => s + l.value, 0);
-      const pipelineAmt = leads
-        .filter(l => l.createdAt?.startsWith(key))
-        .reduce((s, l) => s + l.value, 0);
+      const wonAmt = leads.filter(l => l.status === 'won' && l.updatedAt?.startsWith(key)).reduce((s, l) => s + l.value, 0);
+      const pipelineAmt = leads.filter(l => l.createdAt?.startsWith(key)).reduce((s, l) => s + l.value, 0);
       months.push({ month: key, label, won: wonAmt, pipeline: pipelineAmt });
     }
     return months;
@@ -68,9 +58,7 @@ export default function Dashboard() {
     return (
       <div className={styles.tooltip}>
         <p className={styles.tooltipLabel}>{label}</p>
-        {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color }}>{p.name}: {formatKRW(p.value)}원</p>
-        ))}
+        {payload.map((p, i) => <p key={i} style={{ color: p.color }}>{p.name}: {formatKRW(p.value)}원</p>)}
       </div>
     );
   };
@@ -91,49 +79,31 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* KPI 카드 - 6개 */}
+      {/* KPI */}
       <div className={styles.kpiRow}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiIcon} style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}><TrendingUp size={16} /></div>
-          <div>
-            <div className={styles.kpiNum}>{formatKRW(totalPipelineValue)}원</div>
-            <div className={styles.kpiLabel}>파이프라인 총액</div>
-          </div>
+          <div><div className={styles.kpiNum}>{formatKRW(totalPipelineValue)}원</div><div className={styles.kpiLabel}>파이프라인 총액</div></div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiIcon} style={{ background: 'var(--status-won-bg)', color: 'var(--status-won)' }}><Trophy size={16} /></div>
-          <div>
-            <div className={styles.kpiNum}>{formatKRW(wonValue)}원</div>
-            <div className={styles.kpiLabel}>리드 수주 완료</div>
-          </div>
+          <div><div className={styles.kpiNum}>{formatKRW(wonValue)}원</div><div className={styles.kpiLabel}>리드 수주 완료</div></div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiIcon} style={{ background: 'var(--status-contact-bg)', color: 'var(--status-contact)' }}><Target size={16} /></div>
-          <div>
-            <div className={styles.kpiNum}>{winRate}%</div>
-            <div className={styles.kpiLabel}>수주율 ({wonLeads.length}/{leads.length})</div>
-          </div>
+          <div><div className={styles.kpiNum}>{winRate}%</div><div className={styles.kpiLabel}>수주율 ({wonLeads.length}/{leads.length})</div></div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiIcon} style={{ background: 'var(--accent2-light)', color: 'var(--accent2)' }}><Gavel size={16} /></div>
-          <div>
-            <div className={styles.kpiNum}>{activeBids.length}건</div>
-            <div className={styles.kpiLabel}>진행 중 입찰</div>
-          </div>
+          <div><div className={styles.kpiNum}>{activeBids.length}건</div><div className={styles.kpiLabel}>진행 중 입찰</div></div>
         </div>
         <div className={styles.kpiCard} style={{ cursor: urgentBids.length > 0 ? 'pointer' : 'default' }} onClick={() => urgentBids.length > 0 && navigate('/bids')}>
           <div className={styles.kpiIcon} style={{ background: urgentBids.length > 0 ? 'var(--status-lost-bg)' : 'var(--bg-secondary)', color: urgentBids.length > 0 ? 'var(--status-lost)' : 'var(--text-muted)' }}><Clock size={16} /></div>
-          <div>
-            <div className={styles.kpiNum} style={{ color: urgentBids.length > 0 ? 'var(--status-lost)' : undefined }}>{urgentBids.length}건</div>
-            <div className={styles.kpiLabel}>7일 내 마감 입찰</div>
-          </div>
+          <div><div className={styles.kpiNum} style={{ color: urgentBids.length > 0 ? 'var(--status-lost)' : undefined }}>{urgentBids.length}건</div><div className={styles.kpiLabel}>7일 내 마감 입찰</div></div>
         </div>
         <div className={styles.kpiCard}>
           <div className={styles.kpiIcon} style={{ background: 'var(--status-won-bg)', color: 'var(--status-won)' }}><CalendarCheck size={16} /></div>
-          <div>
-            <div className={styles.kpiNum}>{formatKRW(wonBidValue)}원</div>
-            <div className={styles.kpiLabel}>입찰 낙찰 총액</div>
-          </div>
+          <div><div className={styles.kpiNum}>{formatKRW(wonBidValue)}원</div><div className={styles.kpiLabel}>입찰 낙찰 총액</div></div>
         </div>
       </div>
 
@@ -155,8 +125,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 4섹션 그리드 */}
-      <div className={styles.grid}>
+      {/* 상단 행: 할일 + 딜 */}
+      <div className={styles.topRow}>
 
         {/* 오늘 처리할 일 */}
         <section className={styles.section}>
@@ -164,27 +134,37 @@ export default function Dashboard() {
             <div className={styles.sectionTitle}>
               <CheckSquare size={15} />
               <span>오늘 처리할 일</span>
-              <span className={styles.count}>{todayTasks.length}</span>
+              {todayTasks.length > 0 && (
+                <span className={`${styles.count} ${styles.countUrgent}`}>{todayTasks.length}</span>
+              )}
             </div>
             <button className={styles.link} onClick={() => navigate('/tasks')}>전체 {pendingCount}건 <ExternalLink size={12} /></button>
           </div>
           <div className={styles.taskList}>
-            {todayTasks.length === 0 && <div className={styles.empty}>오늘 처리할 일이 없어요 🎉</div>}
-            {todayTasks.slice(0, 6).map(task => (
-              <div key={task.id} className={styles.taskItem} onClick={() => toggleTask(task.id)}>
-                <div className={styles.taskCheck} />
+            {todayTasks.length === 0 && (
+              <div className={styles.emptyNice}>
+                <Check size={20} strokeWidth={1.5} />
+                <span>오늘 할 일 없음 🎉</span>
+              </div>
+            )}
+            {todayTasks.slice(0, 8).map(task => (
+              <div key={task.id} className={`${styles.taskItem} ${task.done ? styles.taskDone : ''}`} onClick={() => toggleTask(task.id)}>
+                <div className={`${styles.taskCheck} ${task.done ? styles.taskCheckDone : ''}`}>
+                  {task.done && <Check size={9} strokeWidth={3} />}
+                </div>
                 <div className={styles.taskInfo}>
                   <span className={styles.taskTitle}>{task.title}</span>
                   {task.linkedTo && <span className={styles.taskLink}>{task.linkedTo.type === 'lead' ? '🤝' : '📁'} {task.linkedTo.name}</span>}
                 </div>
-                {task.dueDate < today && <AlertCircle size={13} className={styles.overdue} />}
+                {!task.done && task.dueDate < today && <AlertCircle size={12} className={styles.overdue} />}
               </div>
             ))}
           </div>
+          <button className={styles.addBtn} onClick={() => navigate('/tasks')}><Plus size={13} /> 할 일 추가</button>
         </section>
 
         {/* 진행 중인 딜 */}
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.sectionWide}`}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
               <TrendingUp size={15} />
@@ -195,14 +175,12 @@ export default function Dashboard() {
           </div>
           <div className={styles.dealList}>
             {activeLeads.length === 0 && <div className={styles.empty}>진행 중인 딜이 없습니다</div>}
-            {activeLeads.slice(0, 5).map(lead => (
+            {activeLeads.slice(0, 6).map(lead => (
               <div key={lead.id} className={styles.dealItem} onClick={() => navigate(`/leads/${lead.id}`)}>
-                <div className={styles.dealLeft}>
-                  <div className={styles.dealAvatar}>{lead.company[0]}</div>
-                  <div className={styles.dealInfo}>
-                    <span className={styles.dealName}>{lead.dealName || lead.company}</span>
-                    <span className={styles.dealCompany}>{lead.company} · {lead.name}</span>
-                  </div>
+                <div className={styles.dealAvatar}>{lead.company[0]}</div>
+                <div className={styles.dealInfo}>
+                  <span className={styles.dealName}>{lead.dealName || lead.company}</span>
+                  <span className={styles.dealCompany}>{lead.company} · {lead.name}</span>
                 </div>
                 <div className={styles.dealRight}>
                   <LeadStatusBadge status={lead.status} />
@@ -213,72 +191,13 @@ export default function Dashboard() {
           </div>
           <button className={styles.addBtn} onClick={() => navigate('/leads')}><Plus size={13} /> 새 리드 추가</button>
         </section>
+      </div>
 
-        {/* 마감 임박 입찰 */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionTitle}>
-              <Gavel size={15} />
-              <span>마감 임박 입찰</span>
-              <span className={styles.count}>{urgentBids.length}</span>
-            </div>
-            <button className={styles.link} onClick={() => navigate('/bids')}>전체 {activeBids.length}건 <ExternalLink size={12} /></button>
-          </div>
-          <div className={styles.dealList}>
-            {urgentBids.length === 0 && (
-              <div className={styles.empty}>
-                {activeBids.length > 0
-                  ? `진행 중 ${activeBids.length}건, 이번 주 마감 없음`
-                  : '진행 중인 입찰이 없습니다'}
-              </div>
-            )}
-            {urgentBids.slice(0, 5).map(bid => {
-              const dday = bid.deadline ? getDday(bid.deadline) : null;
-              return (
-                <div key={bid.id} className={styles.dealItem} onClick={() => navigate('/bids')}>
-                  <div className={styles.dealLeft}>
-                    <div className={styles.dealAvatar} style={{ background: 'var(--status-contact-bg)', color: 'var(--status-contact)', fontSize: 10, fontWeight: 700 }}>입찰</div>
-                    <div className={styles.dealInfo}>
-                      <span className={styles.dealName}>{bid.title}</span>
-                      <span className={styles.dealCompany}>{bid.agency}</span>
-                    </div>
-                  </div>
-                  <div className={styles.dealRight}>
-                    {dday && (
-                      <span style={{
-                        fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 4,
-                        background: dday.urgent ? 'var(--status-lost-bg)' : 'var(--bg-secondary)',
-                        color: dday.urgent ? 'var(--status-lost)' : 'var(--text-secondary)',
-                      }}>{dday.label}</span>
-                    )}
-                    {bid.amount && <span className={styles.dealValue}>{formatKRW(bid.amount)}원</span>}
-                  </div>
-                </div>
-              );
-            })}
-            {/* 마감임박 없을 때 전체 진행중 입찰 미리보기 */}
-            {urgentBids.length === 0 && activeBids.slice(0, 3).map(bid => (
-              <div key={bid.id} className={styles.dealItem} onClick={() => navigate('/bids')}>
-                <div className={styles.dealLeft}>
-                  <div className={styles.dealAvatar} style={{ background: 'var(--status-contact-bg)', color: 'var(--status-contact)', fontSize: 10, fontWeight: 700 }}>입찰</div>
-                  <div className={styles.dealInfo}>
-                    <span className={styles.dealName}>{bid.title}</span>
-                    <span className={styles.dealCompany}>{bid.agency}</span>
-                  </div>
-                </div>
-                <div className={styles.dealRight}>
-                  <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 4, background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
-                    {bid.status === 'preparing' ? '준비중' : '진행중'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className={styles.addBtn} onClick={() => navigate('/bids')}><Plus size={13} /> 입찰 추가</button>
-        </section>
+      {/* 하단 행: 프로젝트 + 입찰 */}
+      <div className={styles.bottomRow}>
 
         {/* 진행 중 프로젝트 */}
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.sectionWide}`}>
           <div className={styles.sectionHeader}>
             <div className={styles.sectionTitle}>
               <FolderKanban size={15} />
@@ -287,26 +206,78 @@ export default function Dashboard() {
             </div>
             <button className={styles.link} onClick={() => navigate('/projects')}>전체 보기 <ExternalLink size={12} /></button>
           </div>
-          <div className={styles.projectList}>
+          <div className={styles.projectGrid}>
             {activeProjects.length === 0 && <div className={styles.empty}>진행 중인 프로젝트가 없습니다</div>}
             {activeProjects.map(project => {
               const done = project.issues.filter(i => i.status === 'done').length;
+              const inProg = project.issues.filter(i => i.status === 'in_progress').length;
               const total = project.issues.length;
               const pct = total === 0 ? 0 : Math.round((done / total) * 100);
               return (
-                <div key={project.id} className={styles.projectItem} onClick={() => navigate(`/projects/${project.id}`)}>
-                  <div className={styles.projectHeader}>
+                <div key={project.id} className={styles.projectCard} onClick={() => navigate(`/projects/${project.id}`)}>
+                  <div className={styles.projectCardTop}>
                     <div className={styles.projectDot} style={{ background: project.color }} />
                     <span className={styles.projectName}>{project.name}</span>
-                    <span className={styles.projectProgress}>{done}/{total}</span>
+                    <span className={styles.projectPct}>{pct}%</span>
                   </div>
                   <div className={styles.progressBar}>
                     <div className={styles.progressFill} style={{ width: `${pct}%`, background: project.color }} />
+                  </div>
+                  <div className={styles.projectStats}>
+                    <span className={styles.projectStat} style={{ color: 'var(--status-contact)' }}>진행중 {inProg}</span>
+                    <span className={styles.projectStat} style={{ color: 'var(--status-won)' }}>완료 {done}</span>
+                    <span className={styles.projectStat} style={{ color: 'var(--text-muted)' }}>전체 {total}</span>
                   </div>
                 </div>
               );
             })}
           </div>
+        </section>
+
+        {/* 마감 임박 입찰 (후순위) */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.sectionTitle}>
+              <Gavel size={15} />
+              <span>마감 임박 입찰</span>
+              {urgentBids.length > 0 && <span className={`${styles.count} ${styles.countUrgent}`}>{urgentBids.length}</span>}
+            </div>
+            <button className={styles.link} onClick={() => navigate('/bids')}>전체 {activeBids.length}건 <ExternalLink size={12} /></button>
+          </div>
+          <div className={styles.bidList}>
+            {urgentBids.length === 0 && (
+              <div className={styles.emptyMuted}>
+                {activeBids.length > 0
+                  ? <><span className={styles.bidActiveBadge}>{activeBids.length}건 진행중</span><span>이번 주 마감 없음</span></>
+                  : <span>진행 중인 입찰 없음</span>
+                }
+              </div>
+            )}
+            {urgentBids.slice(0, 5).map(bid => {
+              const dday = bid.deadline ? getDday(bid.deadline) : null;
+              return (
+                <div key={bid.id} className={styles.bidItem} onClick={() => navigate('/bids')}>
+                  <div className={styles.bidInfo}>
+                    <span className={styles.bidTitle}>{bid.title}</span>
+                    <span className={styles.bidAgency}>{bid.agency}</span>
+                  </div>
+                  {dday && (
+                    <span className={`${styles.ddayBadge} ${dday.urgent ? styles.ddayUrgent : ''}`}>{dday.label}</span>
+                  )}
+                </div>
+              );
+            })}
+            {urgentBids.length === 0 && activeBids.slice(0, 3).map(bid => (
+              <div key={bid.id} className={styles.bidItem} onClick={() => navigate('/bids')}>
+                <div className={styles.bidInfo}>
+                  <span className={styles.bidTitle}>{bid.title}</span>
+                  <span className={styles.bidAgency}>{bid.agency}</span>
+                </div>
+                <span className={styles.bidStatusBadge}>{bid.status === 'preparing' ? '준비중' : '진행중'}</span>
+              </div>
+            ))}
+          </div>
+          <button className={styles.addBtn} onClick={() => navigate('/bids')}><Plus size={13} /> 입찰 추가</button>
         </section>
 
       </div>

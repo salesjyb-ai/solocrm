@@ -18,6 +18,7 @@ import Customers from './pages/Customers';
 import Competitors from './pages/Competitors';
 import Contracts from './pages/Contracts';
 import Notes from './pages/Notes';
+import Partners from './pages/Partners';
 import './index.css';
 
 function AppRoutes() {
@@ -36,6 +37,7 @@ function AppRoutes() {
         <Route path="/competitors" element={<Competitors />} />
         <Route path="/contracts" element={<Contracts />} />
         <Route path="/notes" element={<Notes />} />
+        <Route path="/partners" element={<Partners />} />
         <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/tasks" element={<Tasks />} />

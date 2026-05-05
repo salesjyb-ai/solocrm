@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { ToastItem, ToastType } from '../components/Toast';
-import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember, Bid, BidStatus, WeeklyActivity, WeeklyActivityType, AiChat, AiChatMode, AiChatRole, Competitor, CompetitorBid, CompetitorBidResult, Contract, ContractStatus, Note, NoteCategory, NoteChecklist } from '../types';
+import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember, Bid, BidStatus, WeeklyActivity, WeeklyActivityType, AiChat, AiChatMode, AiChatRole, Competitor, CompetitorBid, CompetitorBidResult, Contract, ContractStatus, Note, NoteCategory, NoteChecklist, Partner, PartnerStatus, PartnerGrade, PartnerProject, PartnerProjectStatus } from '../types';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -55,6 +55,13 @@ interface AppContextType {
   addContract: (c: Omit<Contract, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateContract: (id: string, fields: Partial<Omit<Contract, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   deleteContract: (id: string) => Promise<void>;
+  partners: Partner[];
+  addPartner: (p: Omit<Partner, 'id' | 'projects' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updatePartner: (id: string, fields: Partial<Omit<Partner, 'id' | 'projects' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deletePartner: (id: string) => Promise<void>;
+  addPartnerProject: (partnerId: string, proj: Omit<PartnerProject, 'id' | 'partnerId' | 'createdAt'>) => Promise<void>;
+  updatePartnerProject: (partnerId: string, projId: string, fields: Partial<Omit<PartnerProject, 'id' | 'partnerId' | 'createdAt'>>) => Promise<void>;
+  deletePartnerProject: (partnerId: string, projId: string) => Promise<void>;
   notes: Note[];
   addNote: (n: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateNote: (id: string, fields: Partial<Omit<Note, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
@@ -183,6 +190,33 @@ function rowToContract(r: Record<string, unknown>): Contract {
   };
 }
 
+function rowToPartnerProject(r: Record<string, unknown>): PartnerProject {
+  return {
+    id: r.id as string, partnerId: r.partner_id as string,
+    title: r.title as string, description: r.description as string | undefined,
+    startDate: r.start_date as string | undefined, endDate: r.end_date as string | undefined,
+    status: r.status as PartnerProjectStatus, amount: r.amount as number | undefined,
+    createdAt: r.created_at as string,
+  };
+}
+
+function rowToPartner(r: Record<string, unknown>, projects: PartnerProject[]): Partner {
+  return {
+    id: r.id as string, name: r.name as string,
+    status: r.status as PartnerStatus, grade: r.grade as PartnerGrade,
+    contactName: r.contact_name as string | undefined,
+    contactEmail: r.contact_email as string | undefined,
+    contactPhone: r.contact_phone as string | undefined,
+    commissionRate: r.commission_rate as number | undefined,
+    contractStart: r.contract_start as string | undefined,
+    contractEnd: r.contract_end as string | undefined,
+    mainField: r.main_field as string | undefined,
+    notes: r.notes as string | undefined,
+    projects: projects.filter(p => p.partnerId === (r.id as string)),
+    createdAt: r.created_at as string, updatedAt: r.updated_at as string,
+  };
+}
+
 function rowToNote(r: Record<string, unknown>): Note {
   return {
     id: r.id as string, title: r.title as string,
@@ -231,6 +265,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [weeklyActivities, setWeeklyActivities] = useState<WeeklyActivity[]>([]);
   const [aiChats, setAiChats] = useState<AiChat[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [session, setSession] = useState<Session | null>(null);
@@ -325,7 +360,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async function fetchAll() {
       setLoading(true);
       try {
-        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, notesRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, partnersRes, partnerProjectsRes, notesRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
           supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
@@ -336,6 +371,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supabase.from('crm_bids').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_weekly_activities').select('*').order('activity_date', { ascending: false }),
           supabase.from('crm_ai_chats').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_partners').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_partner_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_notes').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false }),
           supabase.from('crm_contracts').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_competitors').select('*').order('created_at', { ascending: false }),
@@ -358,6 +395,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
         setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
         setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
+        const pProjs = (partnerProjectsRes.data || []).map(r => rowToPartnerProject(r as Record<string, unknown>));
+        setPartners((partnersRes.data || []).map(r => rowToPartner(r as Record<string, unknown>, pProjs)));
         setNotes((notesRes.data || []).map(r => rowToNote(r as Record<string, unknown>)));
         setContracts((contractsRes.data || []).map(r => rowToContract(r as Record<string, unknown>)));
         const cBids = (competitorBidsRes.data || []).map(r => rowToCompetitorBid(r as Record<string, unknown>));
@@ -446,7 +485,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!session) return;
     const fullSync = async () => {
       try {
-        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, notesRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, partnersRes, partnerProjectsRes, notesRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
           supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
@@ -457,6 +496,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supabase.from('crm_bids').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_weekly_activities').select('*').order('activity_date', { ascending: false }),
           supabase.from('crm_ai_chats').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_partners').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_partner_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_notes').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false }),
           supabase.from('crm_contracts').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_competitors').select('*').order('created_at', { ascending: false }),
@@ -479,6 +520,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
         setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
         setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
+        const pProjs = (partnerProjectsRes.data || []).map(r => rowToPartnerProject(r as Record<string, unknown>));
+        setPartners((partnersRes.data || []).map(r => rowToPartner(r as Record<string, unknown>, pProjs)));
         setNotes((notesRes.data || []).map(r => rowToNote(r as Record<string, unknown>)));
         setContracts((contractsRes.data || []).map(r => rowToContract(r as Record<string, unknown>)));
         const cBids = (competitorBidsRes.data || []).map(r => rowToCompetitorBid(r as Record<string, unknown>));
@@ -736,6 +779,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setContracts(prev => prev.filter(c => c.id !== id));
   };
 
+  // ── Partners ──
+  const addPartner = async (p: Omit<Partner, 'id' | 'projects' | 'createdAt' | 'updatedAt'>) => {
+    const { data, error } = await supabase.from('crm_partners').insert({
+      name: p.name, status: p.status, grade: p.grade,
+      contact_name: p.contactName || null, contact_email: p.contactEmail || null, contact_phone: p.contactPhone || null,
+      commission_rate: p.commissionRate || null, contract_start: p.contractStart || null, contract_end: p.contractEnd || null,
+      main_field: p.mainField || null, notes: p.notes || null,
+    }).select().single();
+    if (error) { showToast('파트너사 추가에 실패했습니다.', 'error'); return; }
+    if (data) setPartners(prev => [rowToPartner(data as Record<string, unknown>, []), ...prev]);
+  };
+
+  const updatePartner = async (id: string, fields: Partial<Omit<Partner, 'id' | 'projects' | 'createdAt' | 'updatedAt'>>) => {
+    const db: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (fields.name !== undefined) db.name = fields.name;
+    if (fields.status !== undefined) db.status = fields.status;
+    if (fields.grade !== undefined) db.grade = fields.grade;
+    if (fields.contactName !== undefined) db.contact_name = fields.contactName || null;
+    if (fields.contactEmail !== undefined) db.contact_email = fields.contactEmail || null;
+    if (fields.contactPhone !== undefined) db.contact_phone = fields.contactPhone || null;
+    if (fields.commissionRate !== undefined) db.commission_rate = fields.commissionRate || null;
+    if (fields.contractStart !== undefined) db.contract_start = fields.contractStart || null;
+    if (fields.contractEnd !== undefined) db.contract_end = fields.contractEnd || null;
+    if (fields.mainField !== undefined) db.main_field = fields.mainField || null;
+    if (fields.notes !== undefined) db.notes = fields.notes || null;
+    const { data } = await supabase.from('crm_partners').update(db).eq('id', id).select().single();
+    if (data) setPartners(prev => prev.map(p => p.id === id ? rowToPartner(data as Record<string, unknown>, p.projects) : p));
+  };
+
+  const deletePartner = async (id: string) => {
+    const { error } = await supabase.from('crm_partners').delete().eq('id', id);
+    if (error) { showToast('파트너사 삭제에 실패했습니다.', 'error'); return; }
+    setPartners(prev => prev.filter(p => p.id !== id));
+  };
+
+  const addPartnerProject = async (partnerId: string, proj: Omit<PartnerProject, 'id' | 'partnerId' | 'createdAt'>) => {
+    const { data, error } = await supabase.from('crm_partner_projects').insert({
+      partner_id: partnerId, title: proj.title, description: proj.description || null,
+      start_date: proj.startDate || null, end_date: proj.endDate || null,
+      status: proj.status, amount: proj.amount || null,
+    }).select().single();
+    if (error) { showToast('프로젝트 이력 추가에 실패했습니다.', 'error'); return; }
+    if (data) {
+      const newProj = rowToPartnerProject(data as Record<string, unknown>);
+      setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, projects: [...p.projects, newProj] } : p));
+    }
+  };
+
+  const updatePartnerProject = async (partnerId: string, projId: string, fields: Partial<Omit<PartnerProject, 'id' | 'partnerId' | 'createdAt'>>) => {
+    const db: Record<string, unknown> = {};
+    if (fields.title !== undefined) db.title = fields.title;
+    if (fields.description !== undefined) db.description = fields.description || null;
+    if (fields.startDate !== undefined) db.start_date = fields.startDate || null;
+    if (fields.endDate !== undefined) db.end_date = fields.endDate || null;
+    if (fields.status !== undefined) db.status = fields.status;
+    if (fields.amount !== undefined) db.amount = fields.amount || null;
+    const { data } = await supabase.from('crm_partner_projects').update(db).eq('id', projId).select().single();
+    if (data) {
+      const updated = rowToPartnerProject(data as Record<string, unknown>);
+      setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, projects: p.projects.map(pr => pr.id === projId ? updated : pr) } : p));
+    }
+  };
+
+  const deletePartnerProject = async (partnerId: string, projId: string) => {
+    const { error } = await supabase.from('crm_partner_projects').delete().eq('id', projId);
+    if (error) { showToast('프로젝트 이력 삭제에 실패했습니다.', 'error'); return; }
+    setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, projects: p.projects.filter(pr => pr.id !== projId) } : p));
+  };
+
   // ── Notes ──
   const addNote = async (n: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
     const { data, error } = await supabase.from('crm_notes').insert({
@@ -820,7 +932,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskDate, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats, notes, addNote, updateNote, deleteNote, contracts, addContract, updateContract, deleteContract, competitors, addCompetitor, updateCompetitor, deleteCompetitor, addCompetitorBid, deleteCompetitorBid }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskDate, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats, partners, addPartner, updatePartner, deletePartner, addPartnerProject, updatePartnerProject, deletePartnerProject, notes, addNote, updateNote, deleteNote, contracts, addContract, updateContract, deleteContract, competitors, addCompetitor, updateCompetitor, deleteCompetitor, addCompetitorBid, deleteCompetitorBid }}>
       {children}
     </AppContext.Provider>
   );

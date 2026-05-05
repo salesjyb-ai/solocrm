@@ -1,6 +1,6 @@
 import { type ReactNode, useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderKanban, CheckSquare, Kanban, Sun, Moon, Zap, LogOut, UserCheck, ClipboardList, BarChart2, BotMessageSquare, Building2, Swords, ScrollText, NotebookPen, GripVertical } from 'lucide-react';
+import { LayoutDashboard, Users, FolderKanban, CheckSquare, Kanban, Sun, Moon, Zap, LogOut, UserCheck, ClipboardList, BarChart2, BotMessageSquare, Building2, Swords, ScrollText, NotebookPen, GripVertical, Handshake } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Toast from './Toast';
 import { supabase } from '../supabase';
@@ -13,6 +13,7 @@ const DEFAULT_NAV = [
   { path: '/competitors', label: '경쟁사',      icon: 'Swords' },
   { path: '/contracts',   label: '계약 관리',   icon: 'ScrollText' },
   { path: '/notes',       label: '메모장',      icon: 'NotebookPen' },
+  { path: '/partners',    label: '파트너사',    icon: 'Handshake' },
   { path: '/projects',    label: '프로젝트',    icon: 'FolderKanban' },
   { path: '/tasks',       label: '할 일',       icon: 'CheckSquare' },
   { path: '/kanban',      label: '칸반',        icon: 'Kanban' },

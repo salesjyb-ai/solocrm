@@ -221,3 +221,37 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
 }
+
+export type PartnerStatus = 'active' | 'dormant' | 'ended';
+export type PartnerGrade = 'strategic' | 'preferred' | 'general';
+export type PartnerProjectStatus = 'ongoing' | 'completed' | 'cancelled';
+
+export interface PartnerProject {
+  id: string;
+  partnerId: string;
+  title: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  status: PartnerProjectStatus;
+  amount?: number;
+  createdAt: string;
+}
+
+export interface Partner {
+  id: string;
+  name: string;
+  status: PartnerStatus;
+  grade: PartnerGrade;
+  contactName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  commissionRate?: number;
+  contractStart?: string;
+  contractEnd?: string;
+  mainField?: string;
+  notes?: string;
+  projects: PartnerProject[];
+  createdAt: string;
+  updatedAt: string;
+}

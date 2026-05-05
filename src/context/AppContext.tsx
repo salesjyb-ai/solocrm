@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { ToastItem, ToastType } from '../components/Toast';
-import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember, Bid, BidStatus, WeeklyActivity, WeeklyActivityType, AiChat, AiChatMode, AiChatRole, Competitor, CompetitorBid, CompetitorBidResult, Contract, ContractStatus } from '../types';
+import type { Lead, LeadStatus, Project, Task, Issue, IssueStatus, Activity, ActivityType, BossItem, Subtask, ProjectMember, Bid, BidStatus, WeeklyActivity, WeeklyActivityType, AiChat, AiChatMode, AiChatRole, Competitor, CompetitorBid, CompetitorBidResult, Contract, ContractStatus, Note, NoteCategory, NoteChecklist } from '../types';
 import { supabase } from '../supabase';
 import type { Session } from '@supabase/supabase-js';
 
@@ -55,6 +55,10 @@ interface AppContextType {
   addContract: (c: Omit<Contract, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateContract: (id: string, fields: Partial<Omit<Contract, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   deleteContract: (id: string) => Promise<void>;
+  notes: Note[];
+  addNote: (n: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateNote: (id: string, fields: Partial<Omit<Note, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
   competitors: Competitor[];
   addCompetitor: (c: Omit<Competitor, 'id' | 'bids' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateCompetitor: (id: string, fields: Partial<Omit<Competitor, 'id' | 'bids' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
@@ -179,6 +183,20 @@ function rowToContract(r: Record<string, unknown>): Contract {
   };
 }
 
+function rowToNote(r: Record<string, unknown>): Note {
+  return {
+    id: r.id as string, title: r.title as string,
+    content: r.content as string | undefined,
+    category: (r.category as NoteCategory) || 'general',
+    tags: (r.tags as string[]) || [],
+    checklist: (r.checklist as NoteChecklist[]) || [],
+    leadId: r.lead_id as string | undefined,
+    projectId: r.project_id as string | undefined,
+    pinned: r.pinned as boolean,
+    createdAt: r.created_at as string, updatedAt: r.updated_at as string,
+  };
+}
+
 function rowToCompetitorBid(r: Record<string, unknown>): CompetitorBid {
   return {
     id: r.id as string, competitorId: r.competitor_id as string,
@@ -213,6 +231,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [weeklyActivities, setWeeklyActivities] = useState<WeeklyActivity[]>([]);
   const [aiChats, setAiChats] = useState<AiChat[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -306,7 +325,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async function fetchAll() {
       setLoading(true);
       try {
-        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, notesRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
           supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
@@ -317,6 +336,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supabase.from('crm_bids').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_weekly_activities').select('*').order('activity_date', { ascending: false }),
           supabase.from('crm_ai_chats').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_notes').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false }),
           supabase.from('crm_contracts').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_competitors').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_competitor_bids').select('*').order('created_at', { ascending: false }),
@@ -338,6 +358,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
         setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
         setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
+        setNotes((notesRes.data || []).map(r => rowToNote(r as Record<string, unknown>)));
         setContracts((contractsRes.data || []).map(r => rowToContract(r as Record<string, unknown>)));
         const cBids = (competitorBidsRes.data || []).map(r => rowToCompetitorBid(r as Record<string, unknown>));
         setCompetitors((competitorsRes.data || []).map(r => rowToCompetitor(r as Record<string, unknown>, cBids)));
@@ -425,7 +446,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!session) return;
     const fullSync = async () => {
       try {
-        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
+        const [leadsRes, projectsRes, issuesRes, tasksRes, activitiesRes, bossRes, membersRes, bidsRes, weeklyRes, aiRes, notesRes, contractsRes, competitorsRes, competitorBidsRes] = await Promise.all([
           supabase.from('crm_leads').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_projects').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_issues').select('*').order('created_at', { ascending: true }),
@@ -436,6 +457,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           supabase.from('crm_bids').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_weekly_activities').select('*').order('activity_date', { ascending: false }),
           supabase.from('crm_ai_chats').select('*').order('created_at', { ascending: true }),
+          supabase.from('crm_notes').select('*').order('pinned', { ascending: false }).order('updated_at', { ascending: false }),
           supabase.from('crm_contracts').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_competitors').select('*').order('created_at', { ascending: false }),
           supabase.from('crm_competitor_bids').select('*').order('created_at', { ascending: false }),
@@ -457,6 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setBids((bidsRes.data || []).map(r => rowToBid(r as Record<string, unknown>)));
         setWeeklyActivities((weeklyRes.data || []).map(r => rowToWeeklyActivity(r as Record<string, unknown>)));
         setAiChats((aiRes.data || []).map(r => rowToAiChat(r as Record<string, unknown>)));
+        setNotes((notesRes.data || []).map(r => rowToNote(r as Record<string, unknown>)));
         setContracts((contractsRes.data || []).map(r => rowToContract(r as Record<string, unknown>)));
         const cBids = (competitorBidsRes.data || []).map(r => rowToCompetitorBid(r as Record<string, unknown>));
         setCompetitors((competitorsRes.data || []).map(r => rowToCompetitor(r as Record<string, unknown>, cBids)));
@@ -713,6 +736,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setContracts(prev => prev.filter(c => c.id !== id));
   };
 
+  // ── Notes ──
+  const addNote = async (n: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const { data, error } = await supabase.from('crm_notes').insert({
+      title: n.title, content: n.content || null, category: n.category,
+      tags: n.tags || [], checklist: n.checklist || [],
+      lead_id: n.leadId || null, project_id: n.projectId || null, pinned: n.pinned,
+    }).select().single();
+    if (error) { showToast('메모 추가에 실패했습니다.', 'error'); return; }
+    if (data) setNotes(prev => [rowToNote(data as Record<string, unknown>), ...prev]);
+  };
+
+  const updateNote = async (id: string, fields: Partial<Omit<Note, 'id' | 'createdAt' | 'updatedAt'>>) => {
+    const db: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (fields.title !== undefined) db.title = fields.title;
+    if (fields.content !== undefined) db.content = fields.content || null;
+    if (fields.category !== undefined) db.category = fields.category;
+    if (fields.tags !== undefined) db.tags = fields.tags;
+    if (fields.checklist !== undefined) db.checklist = fields.checklist;
+    if (fields.leadId !== undefined) db.lead_id = fields.leadId || null;
+    if (fields.projectId !== undefined) db.project_id = fields.projectId || null;
+    if (fields.pinned !== undefined) db.pinned = fields.pinned;
+    const { data } = await supabase.from('crm_notes').update(db).eq('id', id).select().single();
+    if (data) setNotes(prev => prev.map(n => n.id === id ? rowToNote(data as Record<string, unknown>) : n));
+  };
+
+  const deleteNote = async (id: string) => {
+    const { error } = await supabase.from('crm_notes').delete().eq('id', id);
+    if (error) { showToast('메모 삭제에 실패했습니다.', 'error'); return; }
+    setNotes(prev => prev.filter(n => n.id !== id));
+  };
+
   // ── Competitors ──
   const addCompetitor = async (c: Omit<Competitor, 'id' | 'bids' | 'createdAt' | 'updatedAt'>) => {
     const { data, error } = await supabase.from('crm_competitors').insert({
@@ -766,7 +820,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const getLeadActivities = (leadId: string) => activities.filter(a => a.leadId === leadId);
 
   return (
-    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskDate, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats, contracts, addContract, updateContract, deleteContract, competitors, addCompetitor, updateCompetitor, deleteCompetitor, addCompetitorBid, deleteCompetitorBid }}>
+    <AppContext.Provider value={{ leads, projects, tasks, activities, bossItems, addBossItem, updateBossItem, deleteBossItem, session, loading, theme, toggleTheme, signOut, addLead, updateLead, updateLeadStatus, deleteLead, addProject, deleteProject, updateIssue, members, addMember, updateMember, deleteMember, addIssue, updateIssueStatus, deleteIssue, toggleTask, deleteTask, addTask, updateTaskDate, updateTaskSubtasks, addActivity, getLeadActivities, toasts, removeToast, bids, addBid, updateBid, deleteBid, weeklyActivities, addWeeklyActivity, deleteWeeklyActivity, aiChats, addAiChat, clearAiChats, notes, addNote, updateNote, deleteNote, contracts, addContract, updateContract, deleteContract, competitors, addCompetitor, updateCompetitor, deleteCompetitor, addCompetitorBid, deleteCompetitorBid }}>
       {children}
     </AppContext.Provider>
   );

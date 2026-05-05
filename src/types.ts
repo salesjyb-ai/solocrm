@@ -199,3 +199,25 @@ export interface Contract {
   createdAt: string;
   updatedAt: string;
 }
+
+export type NoteCategory = 'tip' | 'knowledge' | 'network' | 'general';
+
+export interface NoteChecklist {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  content?: string;
+  category: NoteCategory;
+  tags: string[];
+  checklist: NoteChecklist[];
+  leadId?: string;
+  projectId?: string;
+  pinned: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

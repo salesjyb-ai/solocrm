@@ -109,7 +109,7 @@ export default function Boss() {
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>임은희 상무님 관리</h1>
+          <h1 className={styles.title}>대표님 관리</h1>
           <p className={styles.sub}>미완료 {pendingCount}건</p>
         </div>
         <div className={styles.headerRight}>
@@ -237,7 +237,7 @@ export default function Boss() {
               <label className={f.label}>유형 *</label>
               <select className={f.select} value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value as BossItemType }))}>
                 <option value="question">질문 (물어봐야 할 것)</option>
-                <option value="task">챙길 일 (상무님 할 일)</option>
+                <option value="task">챙길 일 (대표님 할 일)</option>
                 <option value="memo">메모 (공유 자료)</option>
               </select>
             </div>

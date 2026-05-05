@@ -14,7 +14,7 @@ const nav = [
   { path: '/projects', label: '프로젝트', icon: FolderKanban },
   { path: '/tasks', label: '할 일', icon: CheckSquare },
   { path: '/kanban', label: '칸반', icon: Kanban },
-  { path: '/boss', label: '상무님 관리', icon: UserCheck },
+  { path: '/boss', label: '대표님 관리', icon: UserCheck },
 ];
 const navExtra = [
   { path: '/bids', label: '입찰 트래커', icon: ClipboardList },

@@ -275,7 +275,10 @@ export default function Notes() {
                   )}
 
                   <div className={styles.cardMeta}>
-                    {new Date(note.updatedAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} 수정
+                    <span>📝 {new Date(new Date(note.createdAt).getTime() + 9*60*60*1000).toLocaleString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 등록</span>
+                    {note.updatedAt !== note.createdAt && (
+                      <span>· {new Date(new Date(note.updatedAt).getTime() + 9*60*60*1000).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 수정</span>
+                    )}
                   </div>
                 </div>
               )}

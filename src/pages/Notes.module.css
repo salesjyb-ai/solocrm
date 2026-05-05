@@ -83,7 +83,7 @@
 .checkAddBtn { font-size: 11px; padding: 4px 10px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap; }
 .checkAddBtn:hover { opacity: 0.85; }
 
-.cardMeta { font-size: 11px; color: var(--text-muted); text-align: right; }
+.cardMeta { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
 
 /* 고정 토글 */
 .pinnedToggle { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-secondary); cursor: pointer; }

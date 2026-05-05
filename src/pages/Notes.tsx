@@ -162,7 +162,10 @@ export default function Notes() {
           const linkedProject = note.projectId ? projects.find(p => p.id === note.projectId) : null;
 
           return (
-            <div key={note.id} className={`${styles.card} ${note.pinned ? styles.cardPinned : ''}`}>
+            <div key={note.id} className={`${styles.card} ${note.pinned ? styles.cardPinned : ''} ${isExpanded ? styles.cardExpanded : ''}`}
+              onClick={() => setExpandedId(isExpanded ? null : note.id)}
+              style={{ cursor: 'pointer' }}
+            >
               {/* 카드 헤더 */}
               <div className={styles.cardHeader}>
                 <span className={styles.catChip} style={{ background: cat.bg, color: cat.color }}>
@@ -171,18 +174,18 @@ export default function Notes() {
                 <div className={styles.cardActions}>
                   <button
                     className={`${styles.pinBtn} ${note.pinned ? styles.pinned : ''}`}
-                    onClick={() => updateNote(note.id, { pinned: !note.pinned })}
+                    onClick={e => { e.stopPropagation(); updateNote(note.id, { pinned: !note.pinned }); }}
                     title={note.pinned ? '고정 해제' : '고정'}
                   >
                     <Pin size={13} />
                   </button>
-                  <button className={styles.editBtn} onClick={() => openEdit(note)} title="수정"><Edit2 size={13} /></button>
-                  <button className={styles.deleteBtn} onClick={() => { if (confirm(`"${note.title}" 메모를 삭제할까요?`)) deleteNote(note.id); }} title="삭제"><Trash2 size={13} /></button>
+                  <button className={styles.editBtn} onClick={e => { e.stopPropagation(); openEdit(note); }} title="수정"><Edit2 size={13} /></button>
+                  <button className={styles.deleteBtn} onClick={e => { e.stopPropagation(); if (confirm(`"${note.title}" 메모를 삭제할까요?`)) deleteNote(note.id); }} title="삭제"><Trash2 size={13} /></button>
                 </div>
               </div>
 
               {/* 제목 */}
-              <div className={styles.cardTitle} onClick={() => setExpandedId(isExpanded ? null : note.id)}>
+              <div className={styles.cardTitle}>
                 <span>{note.title}</span>
                 {(note.content || note.checklist.length > 0) && (
                   isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
@@ -208,7 +211,7 @@ export default function Notes() {
 
               {/* 체크리스트 요약 (접힌 상태) */}
               {!isExpanded && note.checklist.length > 0 && (
-                <div className={styles.checkSummary} onClick={() => setExpandedId(note.id)}>
+                <div className={styles.checkSummary}>
                   <div className={styles.checkBar}>
                     <div className={styles.checkBarFill} style={{ width: `${note.checklist.length ? (doneCount / note.checklist.length) * 100 : 0}%` }} />
                   </div>
@@ -223,7 +226,7 @@ export default function Notes() {
 
                   {/* 체크리스트 */}
                   {(note.checklist.length > 0 || true) && (
-                    <div className={styles.checklist}>
+                    <div className={styles.checklist} onClick={e => e.stopPropagation()}>
                       {note.checklist.length > 0 && (
                         <div className={styles.checkHeader}>
                           <span className={styles.checkTitle}>체크리스트</span>
@@ -256,7 +259,7 @@ export default function Notes() {
                           <button className={styles.checkDelete} onClick={() => deleteCheck(note.id, item.id)}><X size={10} /></button>
                         </div>
                       ))}
-                      <div className={styles.checkInput}>
+                      <div className={styles.checkInput} onClick={e => e.stopPropagation()}>
                         <input
                           className={styles.checkInputField}
                           placeholder="항목 추가 (Enter)"

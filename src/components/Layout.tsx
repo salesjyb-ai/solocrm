@@ -39,7 +39,8 @@ function mergeOrder(saved: string[]): string[] {
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { theme, toggleTheme, signOut, toasts, removeToast, session } = useApp();
-  const [order, setOrder] = useState<string[]>(DEFAULT_NAV.map(n => n.path));
+  const [order, setOrder] = useState<string[]>([]);
+  const [navLoaded, setNavLoaded] = useState(false);
   const [draggingPath, setDraggingPath] = useState<string | null>(null);
   const [dragOverPath, setDragOverPath] = useState<string | null>(null);
   const dragNode = useRef<HTMLDivElement | null>(null);
@@ -56,7 +57,10 @@ export default function Layout({ children }: { children: ReactNode }) {
       .then(({ data }) => {
         if (data?.nav_order?.length) {
           setOrder(mergeOrder(data.nav_order));
+        } else {
+          setOrder(DEFAULT_NAV.map(n => n.path));
         }
+        setNavLoaded(true);
       });
   }, [session?.user?.id]);
 
@@ -71,7 +75,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     }, 500);
   };
 
-  const sortedNav = order
+  const sortedNav = (navLoaded ? order : DEFAULT_NAV.map(n => n.path))
     .map(path => DEFAULT_NAV.find(n => n.path === path))
     .filter(Boolean) as typeof DEFAULT_NAV;
 

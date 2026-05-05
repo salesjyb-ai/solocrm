@@ -82,8 +82,8 @@ export default function Projects() {
 
           return (
             <div key={project.id} className={styles.projectCard}>
-              <div className={styles.projectHeader} onClick={() => navigate(`/projects/${project.id}`)} style={{ cursor: 'pointer' }}>
-                <div className={styles.projectLeft}>
+              <div className={styles.projectHeader}>
+                <div className={styles.projectLeft} onClick={() => navigate(`/projects/${project.id}`)} style={{ cursor: 'pointer', flex: 1, minWidth: 0 }}>
                   <div className={styles.projectDot} style={{ background: project.color }} />
                   <div>
                     <div className={styles.projectName}>{project.name}</div>
@@ -102,9 +102,9 @@ export default function Projects() {
                   <button className={styles.deleteProjectBtn} onClick={e => { e.stopPropagation(); if (confirm(`"${project.name}" 프로젝트를 삭제할까요?`)) deleteProject(project.id); }}>
                     <Trash2 size={13} />
                   </button>
-                  <span onClick={e => { e.stopPropagation(); toggle(project.id); }} style={{ display: 'flex', alignItems: 'center' }}>
+                  <button className={styles.toggleBtn} onClick={() => toggle(project.id)}>
                     {isOpen ? <ChevronDown size={15} className={styles.chevron} /> : <ChevronRight size={15} className={styles.chevron} />}
-                  </span>
+                  </button>
                 </div>
               </div>
 

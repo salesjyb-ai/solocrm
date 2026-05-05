@@ -298,17 +298,17 @@ export default function Tasks() {
           {filteredTasks.length === 0 && <div className={styles.emptyState}>할 일이 없습니다 🎉</div>}
           {filteredTasks.sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || '')).map(task => (
             <TaskRow key={task.id} task={task} today={today}
-              isDragTarget={false}
+              isDragTarget={dragOverTaskId === task.id && drag?.kind === 'subtask'}
               onToggle={() => toggleTask(task.id)}
               onDelete={() => deleteTask(task.id)}
               onUpdateSubtasks={(subs) => updateTaskSubtasks(task.id, subs)}
               onDragStart={() => {}}
-              onDragEnd={() => {}}
-              onSubtaskDragStart={() => {}}
-              onSubtaskDragEnd={() => {}}
-              onSubtaskDragOver={() => {}}
-              onSubtaskDrop={() => {}}
-              onSubtaskDragLeave={() => {}}
+              onDragEnd={() => { setDrag(null); setDragOverTaskId(null); }}
+              onSubtaskDragStart={(subtaskId) => setDrag({ kind: 'subtask', taskId: task.id, subtaskId })}
+              onSubtaskDragEnd={() => { setDrag(null); setDragOverTaskId(null); }}
+              onSubtaskDragOver={() => { if (drag?.kind === 'subtask') setDragOverTaskId(task.id); }}
+              onSubtaskDrop={() => handleTaskDrop(task.id)}
+              onSubtaskDragLeave={() => setDragOverTaskId(null)}
             />
           ))}
         </div>

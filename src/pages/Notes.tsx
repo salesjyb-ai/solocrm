@@ -27,6 +27,7 @@ export default function Notes() {
   const [form, setForm] = useState(INIT_FORM);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [newCheckText, setNewCheckText] = useState<Record<string, string>>({});
+  const [editingCheckId, setEditingCheckId] = useState<{ noteId: string; itemId: string; val: string } | null>(null);
 
   const filtered = useMemo(() => {
     return notes.filter(n => {
@@ -95,6 +96,15 @@ export default function Notes() {
     const note = notes.find(n => n.id === noteId);
     if (!note) return;
     updateNote(noteId, { checklist: note.checklist.filter(c => c.id !== itemId) });
+  };
+
+  const saveCheckEdit = (noteId: string, itemId: string, val: string) => {
+    const trimmed = val.trim();
+    if (!trimmed) return;
+    const note = notes.find(n => n.id === noteId);
+    if (!note) return;
+    updateNote(noteId, { checklist: note.checklist.map(c => c.id === itemId ? { ...c, text: trimmed } : c) });
+    setEditingCheckId(null);
   };
 
   const totalCount = notes.length;

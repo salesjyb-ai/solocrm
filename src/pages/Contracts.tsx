@@ -136,6 +136,13 @@ export default function Contracts() {
         </div>
       )}
 
+      {/* 필터 상태에서 드래그 안내 */}
+      {filterStatus !== 'all' && (
+        <div className={styles.dragHintBanner}>
+          💡 드래그 이동은 <strong>전체</strong> 필터에서만 가능해요
+        </div>
+      )}
+
       {/* 전체 보기 - 상태별 섹션 + 드래그 */}
       {filterStatus === 'all' ? (
         <div className={styles.sectionList}>

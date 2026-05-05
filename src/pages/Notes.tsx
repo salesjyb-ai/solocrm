@@ -235,7 +235,24 @@ export default function Notes() {
                           <button className={`${styles.checkBox} ${item.done ? styles.checkBoxDone : ''}`} onClick={() => toggleCheck(note.id, item.id)}>
                             {item.done && <Check size={9} strokeWidth={3} />}
                           </button>
-                          <span className={styles.checkText}>{item.text}</span>
+                          {editingCheckId?.noteId === note.id && editingCheckId?.itemId === item.id ? (
+                            <input
+                              className={styles.checkEditInput}
+                              value={editingCheckId.val}
+                              autoFocus
+                              onChange={e => setEditingCheckId(p => p ? { ...p, val: e.target.value } : null)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') saveCheckEdit(note.id, item.id, editingCheckId.val);
+                                if (e.key === 'Escape') setEditingCheckId(null);
+                              }}
+                              onBlur={() => saveCheckEdit(note.id, item.id, editingCheckId.val)}
+                            />
+                          ) : (
+                            <span className={styles.checkText} onDoubleClick={() => setEditingCheckId({ noteId: note.id, itemId: item.id, val: item.text })}>{item.text}</span>
+                          )}
+                          {!(editingCheckId?.noteId === note.id && editingCheckId?.itemId === item.id) && (
+                            <button className={styles.checkEditBtn} onClick={() => setEditingCheckId({ noteId: note.id, itemId: item.id, val: item.text })} title="수정"><Edit2 size={10} /></button>
+                          )}
                           <button className={styles.checkDelete} onClick={() => deleteCheck(note.id, item.id)}><X size={10} /></button>
                         </div>
                       ))}

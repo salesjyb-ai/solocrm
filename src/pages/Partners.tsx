@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Phone, Mail, X, Check, Briefcase } from 'lucide-react';
+import { Plus, Edit2, Trash2, ChevronDown, ChevronRight, Phone, Mail, X, Briefcase } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import Modal from '../components/Modal';
 import type { Partner, PartnerStatus, PartnerGrade, PartnerProject, PartnerProjectStatus } from '../types';

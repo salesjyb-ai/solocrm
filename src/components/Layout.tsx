@@ -28,7 +28,7 @@ const NAV_EXTRA = [
 
 const ICON_MAP: Record<string, React.ElementType> = {
   LayoutDashboard, Users, Building2, Swords, ScrollText, NotebookPen,
-  FolderKanban, CheckSquare, Kanban, UserCheck, ClipboardList, BarChart2, BotMessageSquare,
+  FolderKanban, CheckSquare, Kanban, UserCheck, ClipboardList, BarChart2, BotMessageSquare, Handshake,
 };
 
 function mergeOrder(saved: string[]): string[] {

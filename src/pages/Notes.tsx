@@ -306,7 +306,7 @@ export default function Notes() {
           </div>
           <div className={f.field}>
             <label className={f.label}>내용</label>
-            <textarea className={f.textarea} rows={12} placeholder="자유롭게 기록하세요" value={form.content} onChange={e => setForm(p => ({ ...p, content: e.target.value }))} />
+            <textarea className={f.textarea} rows={15} placeholder="자유롭게 기록하세요" value={form.content} onChange={e => setForm(p => ({ ...p, content: e.target.value }))} />
           </div>
           <div className={f.field}>
             <label className={f.label}>태그 (쉼표로 구분)</label>

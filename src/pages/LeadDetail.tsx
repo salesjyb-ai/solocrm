@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Phone, Mail, Edit2, Check, X, Plus, FileText, PhoneCall, AtSign, Users, TrendingUp } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LeadStatusSelect } from '../components/StatusBadge';
-import type { LeadStatus, ActivityType } from '../types';
+import type { LeadStatus, ActivityType, LeadAttachment } from '../types';
 import f from './FormField.module.css';
 import styles from './LeadDetail.module.css';
 

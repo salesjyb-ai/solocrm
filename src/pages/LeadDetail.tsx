@@ -27,6 +27,7 @@ export default function LeadDetail() {
   const [actContent, setActContent] = useState('');
   const [saving, setSaving] = useState(false);
   const [notesVal, setNotesVal] = useState(lead?.notes || '');
+  const [attachUploading, setAttachUploading] = useState(false);
 
   // lead.notes가 외부(Realtime/fullSync)로 바뀌면 textarea에 반영
   useEffect(() => { setNotesVal(lead?.notes || ''); }, [lead?.notes]);
@@ -58,6 +59,54 @@ export default function LeadDetail() {
 
   const saveNotes = async (val: string) => {
     await updateLead(lead.id, { notes: val });
+  };
+
+  const handleAttachUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    for (const file of files) {
+      if (file.size > MAX_SIZE) {
+        alert(`"${file.name}"은 5MB를 초과합니다. 더 작은 파일을 첨부해주세요.`);
+        continue;
+      }
+      setAttachUploading(true);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const newAttach: LeadAttachment = {
+          id: crypto.randomUUID(),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          data: reader.result as string,
+          uploadedAt: new Date().toISOString(),
+        };
+        const updated = [...(lead.attachments || []), newAttach];
+        await updateLead(lead.id, { attachments: updated });
+        setAttachUploading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const handleAttachDelete = async (attachId: string) => {
+    if (!confirm('첨부파일을 삭제할까요?')) return;
+    const updated = (lead.attachments || []).filter(a => a.id !== attachId);
+    await updateLead(lead.id, { attachments: updated });
+  };
+
+  const handleAttachDownload = (attach: LeadAttachment) => {
+    const a = document.createElement('a');
+    a.href = attach.data;
+    a.download = attach.name;
+    a.click();
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes}B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
   };
 
   const handleStatusChange = async (status: LeadStatus) => {
@@ -162,6 +211,39 @@ export default function LeadDetail() {
               onBlur={() => saveNotes(notesVal)}
             />
             <p className={styles.notesHint}>포커스 해제 시 자동 저장</p>
+          </div>
+
+          {/* 첨부파일 */}
+          <div className={styles.card}>
+            <div className={styles.attachHeader}>
+              <h3 className={styles.cardTitle}>첨부파일</h3>
+              <label className={styles.attachUploadBtn}>
+                <input type="file" multiple style={{ display: 'none' }} onChange={handleAttachUpload} />
+                <Upload size={13} /> {attachUploading ? '업로드 중...' : '파일 추가'}
+              </label>
+            </div>
+            <p className={styles.attachHint}>파일당 최대 5MB · PDF, 이미지, 문서 등</p>
+            {(lead.attachments || []).length === 0 && !attachUploading && (
+              <div className={styles.attachEmpty}>
+                <Paperclip size={20} strokeWidth={1.5} />
+                <span>첨부된 파일이 없습니다</span>
+              </div>
+            )}
+            <div className={styles.attachList}>
+              {(lead.attachments || []).map(attach => (
+                <div key={attach.id} className={styles.attachItem}>
+                  <Paperclip size={13} className={styles.attachIcon} />
+                  <div className={styles.attachInfo}>
+                    <span className={styles.attachName}>{attach.name}</span>
+                    <span className={styles.attachMeta}>{formatFileSize(attach.size)} · {new Date(attach.uploadedAt).toLocaleDateString('ko-KR')}</span>
+                  </div>
+                  <div className={styles.attachActions}>
+                    <button onClick={() => handleAttachDownload(attach)} title="다운로드"><Download size={13} /></button>
+                    <button onClick={() => handleAttachDelete(attach.id)} title="삭제"><X size={13} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

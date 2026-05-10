@@ -36,6 +36,15 @@ export interface AiChat {
   createdAt: string;
 }
 
+export interface LeadAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  data: string; // base64
+  uploadedAt: string;
+}
+
 export interface Lead {
   id: string;
   name: string;
@@ -48,6 +57,7 @@ export interface Lead {
   nextAction?: string;
   nextActionDate?: string;
   notes?: string;
+  attachments: LeadAttachment[];
   createdAt: string;
   updatedAt: string;
 }

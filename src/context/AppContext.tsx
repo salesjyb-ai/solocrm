@@ -84,6 +84,7 @@ function rowToLead(r: Record<string, unknown>): Lead {
     status: r.status as LeadStatus, nextAction: r.next_action as string | undefined,
     nextActionDate: r.next_action_date as string | undefined,
     notes: r.notes as string | undefined,
+    attachments: (r.attachments as Lead['attachments']) || [],
     createdAt: (r.created_at as string).split('T')[0],
     updatedAt: (r.updated_at as string).split('T')[0],
   };
@@ -557,6 +558,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (fields.nextAction !== undefined) dbFields.next_action = fields.nextAction;
     if (fields.nextActionDate !== undefined) dbFields.next_action_date = fields.nextActionDate || null;
     if (fields.notes !== undefined) dbFields.notes = fields.notes;
+    if (fields.attachments !== undefined) dbFields.attachments = fields.attachments;
     const { data, error } = await supabase.from('crm_leads').update(dbFields).eq('id', id).select().single();
     if (error) { showToast('리드 수정에 실패했습니다.', 'error'); return; }
     if (data) setLeads(prev => prev.map(l => l.id === id ? rowToLead(data as Record<string, unknown>) : l));

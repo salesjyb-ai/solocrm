@@ -43,7 +43,7 @@
 .contactBtn { display: flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: var(--radius-xs); font-size: 12.5px; font-weight: 600; background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border); transition: all var(--transition); }
 .contactBtn:hover { border-color: var(--accent-muted); color: var(--accent); background: var(--accent-light); }
 
-.notesArea { width: 100%; min-height: 120px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-primary); font-size: 13.5px; resize: vertical; outline: none; transition: border-color var(--transition); line-height: 1.6; }
+.notesArea { width: 100%; min-height: 280px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text-primary); font-size: 13.5px; resize: vertical; outline: none; transition: border-color var(--transition); line-height: 1.6; }
 .notesArea:focus { border-color: var(--accent-muted); }
 .notesHint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
 
@@ -75,3 +75,22 @@
   .page { padding: 16px; }
   .grid { grid-template-columns: 1fr; }
 }
+
+/* 첨부파일 */
+.attachHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.attachUploadBtn { display: flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent); padding: 5px 12px; border: 1px solid var(--accent-muted); border-radius: var(--radius-xs); cursor: pointer; transition: all var(--transition); }
+.attachUploadBtn:hover { background: var(--accent-light); }
+.attachHint { font-size: 11.5px; color: var(--text-muted); margin-bottom: 10px; }
+.attachEmpty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px; color: var(--text-muted); font-size: 13px; }
+.attachList { display: flex; flex-direction: column; gap: 6px; }
+.attachItem { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); transition: border-color var(--transition); }
+.attachItem:hover { border-color: var(--border); }
+.attachIcon { color: var(--text-muted); flex-shrink: 0; }
+.attachInfo { flex: 1; min-width: 0; }
+.attachName { display: block; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attachMeta { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.attachActions { display: flex; gap: 4px; flex-shrink: 0; }
+.attachActions button { color: var(--text-muted); padding: 5px; border-radius: 3px; display: flex; align-items: center; cursor: pointer; transition: all var(--transition); opacity: 0; }
+.attachItem:hover .attachActions button { opacity: 1; }
+.attachActions button:first-child:hover { color: var(--accent); background: var(--accent-light); }
+.attachActions button:last-child:hover { color: var(--status-lost); background: var(--status-lost-bg); }

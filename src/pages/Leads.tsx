@@ -34,7 +34,7 @@ export default function Leads() {
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.company.trim()) return;
-    await addLead({ name: form.name, company: form.company, dealName: form.dealName, contact: form.contact, phone: form.phone, value: Number(form.value.replace(/,/g,'')) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate });
+    await addLead({ name: form.name, company: form.company, dealName: form.dealName, contact: form.contact, phone: form.phone, value: Number(form.value.replace(/,/g,'')) || 0, status: form.status, nextAction: form.nextAction, nextActionDate: form.nextActionDate, attachments: [] });
     setModalOpen(false);
     setForm({ name: '', company: '', dealName: '', contact: '', phone: '', value: '', status: 'new', nextAction: '', nextActionDate: '' });
   };

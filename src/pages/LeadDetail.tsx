@@ -219,26 +219,26 @@ export default function LeadDetail() {
               <h3 className={styles.cardTitle}>첨부파일</h3>
               <label className={styles.attachUploadBtn}>
                 <input type="file" multiple style={{ display: 'none' }} onChange={handleAttachUpload} />
-                <Upload size={13} /> {attachUploading ? '업로드 중...' : '파일 추가'}
+                {attachUploading ? '업로드 중...' : '📎 파일 추가'}
               </label>
             </div>
             <p className={styles.attachHint}>파일당 최대 5MB · PDF, 이미지, 문서 등</p>
             {(lead.attachments || []).length === 0 && !attachUploading && (
               <div className={styles.attachEmpty}>
-                <Paperclip size={20} strokeWidth={1.5} />
+                <span style={{fontSize:24}}>📎</span>
                 <span>첨부된 파일이 없습니다</span>
               </div>
             )}
             <div className={styles.attachList}>
               {(lead.attachments || []).map(attach => (
                 <div key={attach.id} className={styles.attachItem}>
-                  <Paperclip size={13} className={styles.attachIcon} />
+                  <span style={{fontSize:13}}>📎</span>
                   <div className={styles.attachInfo}>
                     <span className={styles.attachName}>{attach.name}</span>
                     <span className={styles.attachMeta}>{formatFileSize(attach.size)} · {new Date(attach.uploadedAt).toLocaleDateString('ko-KR')}</span>
                   </div>
                   <div className={styles.attachActions}>
-                    <button onClick={() => handleAttachDownload(attach)} title="다운로드"><Download size={13} /></button>
+                    <button onClick={() => handleAttachDownload(attach)} title="다운로드">⬇</button>
                     <button onClick={() => handleAttachDelete(attach.id)} title="삭제"><X size={13} /></button>
                   </div>
                 </div>

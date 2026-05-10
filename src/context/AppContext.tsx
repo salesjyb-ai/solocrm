@@ -541,6 +541,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       name: lead.name, company: lead.company, deal_name: lead.dealName || null, contact: lead.contact, phone: lead.phone,
       value: lead.value, status: lead.status, notes: lead.notes,
       next_action: lead.nextAction, next_action_date: lead.nextActionDate || null,
+      attachments: lead.attachments || [],
     }).select().single();
     if (error) { showToast('리드 추가에 실패했습니다.', 'error'); return; }
     if (data) setLeads(prev => [rowToLead(data as Record<string, unknown>), ...prev]);

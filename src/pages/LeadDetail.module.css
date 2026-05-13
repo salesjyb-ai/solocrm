@@ -67,7 +67,19 @@
 .actMeta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
 .actType { font-size: 11.5px; font-weight: 700; }
 .actDate { font-size: 11px; color: var(--text-muted); }
-.actContent { font-size: 13px; color: var(--text-primary); line-height: 1.5; word-break: break-word; }
+.actActions { display: flex; gap: 2px; margin-left: auto; opacity: 0; transition: opacity var(--transition); }
+.actItem:hover .actActions { opacity: 1; }
+.actEditBtn { font-size: 11px; padding: 2px 4px; border-radius: 3px; cursor: pointer; color: var(--text-muted); transition: all var(--transition); }
+.actEditBtn:hover { background: var(--accent-light); }
+.actDeleteBtn { font-size: 11px; padding: 2px 4px; border-radius: 3px; cursor: pointer; color: var(--text-muted); transition: all var(--transition); }
+.actDeleteBtn:hover { background: var(--status-lost-bg); }
+.actContent { font-size: 13px; color: var(--text-primary); line-height: 1.6; word-break: break-word; white-space: pre-wrap; margin: 0; }
+.actEditWrap { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.actEditArea { width: 100%; padding: 8px 10px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); font-size: 13px; line-height: 1.6; resize: vertical; outline: none; white-space: pre-wrap; }
+.actEditBtns { display: flex; gap: 6px; }
+.actEditSave { padding: 5px 14px; background: var(--accent); color: #fff; border-radius: var(--radius-xs); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: opacity var(--transition); }
+.actEditSave:hover { opacity: 0.85; }
+.actEditCancel { padding: 5px 12px; background: var(--bg-secondary); color: var(--text-secondary); border-radius: var(--radius-xs); font-size: 12.5px; cursor: pointer; }
 
 .notFound { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 16px; color: var(--text-muted); }
 

@@ -18,13 +18,15 @@ const activityTypeInfo: Record<ActivityType, { label: string; icon: typeof FileT
 export default function LeadDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { leads, updateLead, updateLeadStatus, addActivity, getLeadActivities } = useApp();
+  const { leads, updateLead, updateLeadStatus, addActivity, updateActivity, deleteActivity, getLeadActivities } = useApp();
   const lead = leads.find(l => l.id === id);
 
   const [editField, setEditField] = useState<string | null>(null);
   const [editVal, setEditVal] = useState('');
   const [actType, setActType] = useState<ActivityType>('note');
   const [actContent, setActContent] = useState('');
+  const [editingActId, setEditingActId] = useState<string | null>(null);
+  const [editingActVal, setEditingActVal] = useState('');
   const [saving, setSaving] = useState(false);
   const [notesVal, setNotesVal] = useState(lead?.notes || '');
   const [attachUploading, setAttachUploading] = useState(false);
@@ -284,6 +286,7 @@ export default function LeadDetail() {
                 const date = new Date(act.createdAt);
                 const dateStr = date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
                 const timeStr = date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                const isEditing = editingActId === act.id;
                 return (
                   <div key={act.id} className={styles.actItem}>
                     <div className={styles.actIcon} style={{ color, background: `${color}1a` }}>
@@ -293,8 +296,32 @@ export default function LeadDetail() {
                       <div className={styles.actMeta}>
                         <span className={styles.actType} style={{ color }}>{label}</span>
                         <span className={styles.actDate}>{dateStr} {timeStr}</span>
+                        <div className={styles.actActions}>
+                          {!isEditing && (
+                            <>
+                              <button className={styles.actEditBtn} onClick={() => { setEditingActId(act.id); setEditingActVal(act.content); }} title="수정">✏️</button>
+                              <button className={styles.actDeleteBtn} onClick={() => { if (confirm('이 활동 기록을 삭제할까요?')) deleteActivity(act.id); }} title="삭제">🗑</button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <p className={styles.actContent}>{act.content}</p>
+                      {isEditing ? (
+                        <div className={styles.actEditWrap}>
+                          <textarea
+                            className={styles.actEditArea}
+                            value={editingActVal}
+                            onChange={e => setEditingActVal(e.target.value)}
+                            rows={6}
+                            autoFocus
+                          />
+                          <div className={styles.actEditBtns}>
+                            <button className={styles.actEditSave} onClick={async () => { await updateActivity(act.id, editingActVal); setEditingActId(null); }}>저장</button>
+                            <button className={styles.actEditCancel} onClick={() => setEditingActId(null)}>취소</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className={styles.actContent}>{act.content}</p>
+                      )}
                     </div>
                   </div>
                 );

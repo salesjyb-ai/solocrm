@@ -1,4 +1,4 @@
-export type LeadStatus = 'new' | 'contacted' | 'meeting' | 'proposal' | 'won' | 'lost';
+export type LeadStatus = 'new' | 'meeting' | 'proposal' | 'won' | 'lost';
 export type IssueStatus = 'todo' | 'in_progress' | 'done';
 export type Priority = 'low' | 'medium' | 'high';
 export type BidStatus = 'preparing' | 'active' | 'won' | 'lost';

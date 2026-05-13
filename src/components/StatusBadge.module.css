@@ -23,7 +23,6 @@
 }
 
 .lead_new { background: var(--status-new-bg); color: var(--status-new); }
-.lead_contacted { background: var(--status-contact-bg); color: var(--status-contact); }
 .lead_meeting { background: #f3e8ff; color: #8b5cf6; }
 .lead_proposal { background: var(--status-proposal-bg); color: var(--status-proposal); }
 .lead_won { background: var(--status-won-bg); color: var(--status-won); }

@@ -255,7 +255,7 @@ function rowToCompetitor(r: Record<string, unknown>, bids: CompetitorBid[]): Com
   };
 }
 
-const statusLabel: Record<LeadStatus, string> = { new: '신규', contacted: '연락완료', meeting: '미팅진행', proposal: '제안중', won: '수주', lost: '실패' };
+const statusLabel: Record<LeadStatus, string> = { new: '신규', meeting: '미팅진행', proposal: '제안중', won: '수주', lost: '실패' };
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [leads, setLeads] = useState<Lead[]>([]);

@@ -2,7 +2,7 @@ import type { LeadStatus, IssueStatus } from '../types';
 import styles from './StatusBadge.module.css';
 
 const leadLabels: Record<LeadStatus, string> = {
-  new: '신규', contacted: '연락완료', meeting: '미팅진행', proposal: '제안중', won: '수주', lost: '실패'
+  new: '신규', meeting: '미팅진행', proposal: '제안중', won: '수주', lost: '실패'
 };
 const issueLabels: Record<IssueStatus, string> = {
   todo: '할 일', in_progress: '진행 중', done: '완료'

@@ -88,7 +88,7 @@
 }
 
 /* ── 칸반 보드 ── */
-.kanbanBoard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 16px; align-items: start; }
+.kanbanBoard { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 16px; align-items: start; }
 .kanbanCol { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color var(--transition); min-height: 120px; }
 .kanbanCol:hover { border-color: var(--accent-muted); }
 .kanbanDragOver { border-color: var(--accent) !important; background: var(--accent-light); }

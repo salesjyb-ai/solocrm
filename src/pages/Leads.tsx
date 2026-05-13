@@ -9,9 +9,9 @@ import f from './FormField.module.css';
 import { exportLeads } from '../utils/exportCSV';
 import styles from './Leads.module.css';
 
-const statusOrder: LeadStatus[] = ['new', 'contacted', 'meeting', 'proposal', 'won', 'lost'];
-const statusLabel: Record<LeadStatus, string> = { new: '신규', contacted: '연락완료', meeting: '미팅진행', proposal: '제안중', won: '수주', lost: '실패' };
-const statusColor: Record<LeadStatus, string> = { new: 'var(--text-muted)', contacted: 'var(--status-contact)', meeting: '#8b5cf6', proposal: '#f59e0b', won: 'var(--status-won)', lost: 'var(--status-lost)' };
+const statusOrder: LeadStatus[] = ['new', 'meeting', 'proposal', 'won', 'lost'];
+const statusLabel: Record<LeadStatus, string> = { new: '신규', meeting: '미팅진행', proposal: '제안중', won: '수주', lost: '실패' };
+const statusColor: Record<LeadStatus, string> = { new: 'var(--text-muted)', meeting: '#8b5cf6', proposal: '#f59e0b', won: 'var(--status-won)', lost: 'var(--status-lost)' };
 
 export default function Leads() {
   const { leads, addLead, updateLeadStatus, deleteLead } = useApp();
